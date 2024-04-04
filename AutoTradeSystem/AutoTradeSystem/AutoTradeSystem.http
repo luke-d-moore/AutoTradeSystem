@@ -1,0 +1,6 @@
+@AutoTradeSystem_HostAddress = http://localhost:5042
+
+GET {{AutoTradeSystem_HostAddress}}/ TradingStrategy/
+Accept: application/json
+
+###
