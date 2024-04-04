@@ -1,6 +1,6 @@
-﻿using AutoTradeSystem.Server.Dtos;
+﻿using AutoTradeSystem.Dtos;
 
-namespace AutoTradeSystem.Server.Services
+namespace AutoTradeSystem.Services
 {
     public interface IAutoTradingStrategyService :IHostedService
     {

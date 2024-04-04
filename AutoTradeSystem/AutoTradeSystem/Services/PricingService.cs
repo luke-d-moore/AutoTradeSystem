@@ -1,4 +1,4 @@
-﻿namespace AutoTradeSystem.Server.Services
+﻿namespace AutoTradeSystem.Services
 {
     public class PricingService : IPricingService
     {

@@ -1,7 +1,7 @@
-﻿using AutoTradeSystem.Server.Dtos;
+﻿using AutoTradeSystem.Dtos;
 using System.Collections.Concurrent;
 
-namespace AutoTradeSystem.Server.Services
+namespace AutoTradeSystem.Services
 {
     internal class AutoTradingStrategyService : AutoTradingStrategyServiceBase, IAutoTradingStrategyService
     {

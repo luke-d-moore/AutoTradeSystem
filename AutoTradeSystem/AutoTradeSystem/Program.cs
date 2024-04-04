@@ -1,4 +1,4 @@
-using AutoTradeSystem.Server.Services;
+using AutoTradeSystem.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

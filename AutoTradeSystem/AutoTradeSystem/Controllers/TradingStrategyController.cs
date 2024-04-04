@@ -1,11 +1,13 @@
-﻿using AutoTradeSystem.Server.Services;
+﻿using AutoTradeSystem.Services;
 using Microsoft.AspNetCore.Mvc;
-using AutoTradeSystem.Server.Dtos;
+using AutoTradeSystem.Dtos;
 using Swashbuckle.AspNetCore.Annotations;
+using System.Text.Json;
+using System.Net;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace AutoTradeSystem.Server.Controllers
+namespace AutoTradeSystem.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -30,8 +32,8 @@ namespace AutoTradeSystem.Server.Controllers
         // POST api/<TradingStrategyController>
         [HttpPost]
         [SwaggerOperation(nameof(AddStrategy))]
-        [SwaggerResponse(StatusCodes.Status200OK, "OK", typeof(string))]
-        public async Task<IActionResult> AddStrategy(TradingStrategyDto tradingStrategy)
+        [SwaggerResponse(StatusCodes.Status200OK, "OK", typeof(Response))]
+        public async Task<ActionResult<Response>> AddStrategy(TradingStrategyDto tradingStrategy)
         {
             if (tradingStrategy == null) return BadRequest("Invalid Strategy");
             if (tradingStrategy.Ticker == null || (tradingStrategy.Ticker.Length > 5 || tradingStrategy.Ticker.Length < 3))
@@ -52,13 +54,21 @@ namespace AutoTradeSystem.Server.Controllers
             var added = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
             if (added)
             {
-                _logger.LogInformation("Stretegy Added Successfully");
+                _logger.LogInformation("Strategy Added Successfully");
             }
             else
             {
-                _logger.LogError("Failed To Add Stretagy {@strategyDetails}", tradingStrategy);
+                _logger.LogError("Failed To Add Strategy {@strategyDetails}", tradingStrategy);
             }
-            return added ? Ok("Strategy Added Successfully") : BadRequest("Failed To Add Strategy");
+
+            if (added)
+            {
+                return Ok(new Response(true, "Strategy Added Successfully"));
+            }
+            else
+            {
+                return BadRequest(new Response(false, "Failed To Add Strategy"));
+            }
         }
 
         // DELETE api/<TradingStrategyController>/5
@@ -76,13 +86,21 @@ namespace AutoTradeSystem.Server.Controllers
             var removed = await _autoTradingStrategyService.RemoveStrategy(id);
             if (removed)
             {
-                _logger.LogInformation("Stretegy Removed Successfully");
+                _logger.LogInformation("Strategy Removed Successfully");
             }
             else
             {
-                _logger.LogError("Failed To Remove Stretagy {0}", id);
+                _logger.LogError("Failed To Remove Strategy {0}", id);
             }
-            return removed ? Ok("Stretegy Removed Successfully") : NotFound();
+
+            if (removed)
+            {
+                return Ok(new Response(true, "Strategy Removed Successfully"));
+            }
+            else
+            {
+                return NotFound(new Response(false, "Strategy Not Found"));
+            }
         }
     }
 }

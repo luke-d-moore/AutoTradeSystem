@@ -1,4 +1,4 @@
-﻿namespace AutoTradeSystem.Server.Dtos
+﻿namespace AutoTradeSystem.Dtos
 {
     public class TradingStrategy
     {
