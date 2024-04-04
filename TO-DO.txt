@@ -1,0 +1,8 @@
+Developer Notes
+
+Fixes to the Serilog logging, 
+The exceptions are not coming through with the full stack trace
+Fix the filtering of logs
+
+Controller Fixes
+Response class is not working correctly
