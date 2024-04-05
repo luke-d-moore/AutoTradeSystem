@@ -24,16 +24,16 @@ namespace AutoTradeSystem.Controllers
 
         // GET: api/<TradingStrategyController>
         [HttpGet]
-        public IDictionary<string, TradingStrategy> Get()
+        public GetStrategiesResponse Get()
         {
-            return _autoTradingStrategyService.GetStrategies();
+            return new GetStrategiesResponse(true, "Strategies Retrieved", _autoTradingStrategyService.GetStrategies());
         }
 
         // POST api/<TradingStrategyController>
         [HttpPost]
         [SwaggerOperation(nameof(AddStrategy))]
         [SwaggerResponse(StatusCodes.Status200OK, "OK", typeof(Response))]
-        public async Task<ActionResult<Response>> AddStrategy(TradingStrategyDto tradingStrategy)
+        public async Task<ActionResult<AddStrategyResponse>> AddStrategy(TradingStrategyDto tradingStrategy)
         {
             if (tradingStrategy == null) return BadRequest("Invalid Strategy");
             if (tradingStrategy.Ticker == null || (tradingStrategy.Ticker.Length > 5 || tradingStrategy.Ticker.Length < 3))
@@ -63,11 +63,11 @@ namespace AutoTradeSystem.Controllers
 
             if (added)
             {
-                return Ok(new Response(true, "Strategy Added Successfully"));
+                return Ok(new AddStrategyResponse(true, "Strategy Added Successfully", tradingStrategy));
             }
             else
             {
-                return BadRequest(new Response(false, "Failed To Add Strategy"));
+                return BadRequest(new AddStrategyResponse(false, "Failed To Add Strategy", tradingStrategy));
             }
         }
 
@@ -76,7 +76,7 @@ namespace AutoTradeSystem.Controllers
         [SwaggerOperation(nameof(DeleteStrategy))]
         [SwaggerResponse(StatusCodes.Status200OK, "OK")]
         [SwaggerResponse(StatusCodes.Status404NotFound, "Not Found")]
-        public async Task<IActionResult> DeleteStrategy(string id)
+        public async Task<ActionResult<RemoveStrategyResponse>> DeleteStrategy(string id)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -95,11 +95,11 @@ namespace AutoTradeSystem.Controllers
 
             if (removed)
             {
-                return Ok(new Response(true, "Strategy Removed Successfully"));
+                return Ok(new RemoveStrategyResponse(true, "Strategy Removed Successfully", id));
             }
             else
             {
-                return NotFound(new Response(false, "Strategy Not Found"));
+                return NotFound(new RemoveStrategyResponse(false, "Strategy Not Found", id));
             }
         }
     }
