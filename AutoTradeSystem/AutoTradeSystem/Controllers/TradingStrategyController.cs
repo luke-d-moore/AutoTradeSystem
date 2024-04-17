@@ -24,9 +24,9 @@ namespace AutoTradeSystem.Controllers
 
         // GET: api/<TradingStrategyController>
         [HttpGet]
-        public GetStrategiesResponse Get()
+        public IActionResult Get()
         {
-            return new GetStrategiesResponse(true, "Strategies Retrieved", _autoTradingStrategyService.GetStrategies());
+            return Ok(new GetStrategiesResponse(true, "Strategies Retrieved", _autoTradingStrategyService.GetStrategies()));
         }
 
         // POST api/<TradingStrategyController>
