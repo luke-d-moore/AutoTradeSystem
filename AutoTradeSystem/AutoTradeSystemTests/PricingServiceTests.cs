@@ -1,4 +1,5 @@
 using AutoTradeSystem;
+using AutoTradeSystem.Dtos;
 using AutoTradeSystem.Services;
 using Moq;
 
@@ -12,6 +13,14 @@ namespace AutoTradeSystemTests
         {
             _pricingService = new PricingService();
         }
+        public static IEnumerable<object[]> TickerData =>
+    new List<object[]>
+    {
+                new object[] { null },
+                new object[] { "wrong"},
+                new object[] { "" }
+    };
+
         [Fact]
         public async Task GetCurrentPrice_ValidTicker_ReturnsDecimalAsync()
         {
@@ -20,9 +29,7 @@ namespace AutoTradeSystemTests
             //Act and Assert
             Assert.IsType<decimal>(result);
         }
-        [Theory]
-        [InlineData("wrong")]
-        [InlineData(null)]
+        [Theory, MemberData(nameof(TickerData))]
         public void GetCurrentPrice_InValidTicker_ThrowsArgumentException(string ticker)
         {
             // Arrange
@@ -38,9 +45,7 @@ namespace AutoTradeSystemTests
             //Act and Assert
             Assert.Equal(100, result);
         }
-        [Theory]
-        [InlineData(null)]
-        [InlineData("wrong")]
+        [Theory, MemberData(nameof(TickerData))]
         public void Buy_InValidTicker_ThrowsArgumentException(string ticker)
         {
             // Arrange
@@ -64,9 +69,7 @@ namespace AutoTradeSystemTests
             //Act and Assert
             Assert.Equal(100, result);
         }
-        [Theory]
-        [InlineData(null)]
-        [InlineData("wrong")]
+        [Theory, MemberData(nameof(TickerData))]
         public void Sell_InValidTicker_ThrowsArgumentException(string ticker)
         {
             // Arrange
