@@ -17,6 +17,10 @@ namespace AutoTradeSystemTests
             _logger = new Mock<ILogger<AutoTradingStrategyService>>().Object;
             _autoTradingStrategyService = new AutoTradingStrategyService(_logger, _pricingService);
         }
+        private TradingStrategyDto GetTradingStrategy()
+        {
+            return new TradingStrategyDto() { Ticker = "TEST", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy };
+        }
         [Fact]
         public void GetStrategies_NoStrategies_ReturnsZeroStrategies()
         {
@@ -29,7 +33,7 @@ namespace AutoTradeSystemTests
         public async Task GetStrategies_OneStrategy_ReturnsOneStrategy()
         {
             //Arrange
-            var tradingStrategy = new TradingStrategyDto() { Ticker = "TEST", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy };
+            var tradingStrategy = GetTradingStrategy();
             await _autoTradingStrategyService.AddStrategy(tradingStrategy);
             var result = _autoTradingStrategyService.GetStrategies();
             //Act and Assert
@@ -39,7 +43,7 @@ namespace AutoTradeSystemTests
         public async Task AddStrategy_ValidStrategy_ReturnsTrue()
         {
             //Arrange
-            var tradingStrategy = new TradingStrategyDto() { Ticker = "TEST", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy };
+            var tradingStrategy = GetTradingStrategy();
             var result = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
             //Act and Assert
             Assert.True(result);
@@ -48,7 +52,7 @@ namespace AutoTradeSystemTests
         public async Task RemoveStrategy_ValidID_ReturnsTrue()
         {
             //Arrange
-            var tradingStrategy = new TradingStrategyDto() { Ticker = "TEST", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy };
+            var tradingStrategy = GetTradingStrategy();
             await _autoTradingStrategyService.AddStrategy(tradingStrategy);
             var ID = _autoTradingStrategyService.GetStrategies().Keys.First();
             var resultRemove = await _autoTradingStrategyService.RemoveStrategy(ID);
@@ -59,7 +63,7 @@ namespace AutoTradeSystemTests
         public async Task AddStrategy_NullStrategy_ReturnsFalse()
         {
             //Arrange
-            var tradingStrategy = new TradingStrategyDto();
+            var tradingStrategy = GetTradingStrategy();
             tradingStrategy = null;
             var result = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
             //Act and Assert
@@ -69,7 +73,8 @@ namespace AutoTradeSystemTests
         public async Task AddStrategy_InValidQuantity_ReturnsFalse()
         {
             //Arrange
-            var tradingStrategy = new TradingStrategyDto() { Ticker = "TEST", PriceChange = 10, Quantity = 0, TradeAction = TradeAction.Buy };
+            var tradingStrategy = GetTradingStrategy();
+            tradingStrategy.Quantity = 0;
             var result = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
             //Act and Assert
             Assert.False(result);
@@ -78,7 +83,8 @@ namespace AutoTradeSystemTests
         public async Task AddStrategy_InValidTicker_ReturnsFalse()
         {
             //Arrange
-            var tradingStrategy = new TradingStrategyDto() { Ticker = "wrong", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy };
+            var tradingStrategy = GetTradingStrategy();
+            tradingStrategy.Ticker = "wrong"; 
             var result = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
             //Act and Assert
             Assert.False(result);
@@ -87,7 +93,8 @@ namespace AutoTradeSystemTests
         public async Task AddStrategy_InValidPriceChange_ReturnsFalse()
         {
             //Arrange
-            var tradingStrategy = new TradingStrategyDto() { Ticker = "TEST", PriceChange = 0, Quantity = 10, TradeAction = TradeAction.Buy };
+            var tradingStrategy = GetTradingStrategy();
+            tradingStrategy.PriceChange = 0;
             var result = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
             //Act and Assert
             Assert.False(result);
