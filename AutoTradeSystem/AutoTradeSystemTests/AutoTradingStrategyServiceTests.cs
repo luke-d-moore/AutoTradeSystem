@@ -59,46 +59,23 @@ namespace AutoTradeSystemTests
             //Act and Assert
             Assert.True(resultRemove);
         }
-        [Fact]
-        public async Task AddStrategy_NullStrategy_ReturnsFalse()
+        public static IEnumerable<object[]> AddStrategyReturnFalseData =>
+            new List<object[]>
+            {
+                new object[] { null },
+                new object[] { new TradingStrategyDto() { Ticker = "wrong", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy } },
+                new object[] { new TradingStrategyDto() { Ticker = "TEST", PriceChange = 0, Quantity = 10, TradeAction = TradeAction.Buy } },
+                new object[] { new TradingStrategyDto() { Ticker = "TEST", PriceChange = 10, Quantity = 0, TradeAction = TradeAction.Buy } },
+                new object[] { new TradingStrategyDto() { Ticker = "ab", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy } },
+                new object[] { new TradingStrategyDto() { Ticker = "abcdef", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy } },
+                new object[] { new TradingStrategyDto() { Ticker = null, PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy } },
+
+            };
+
+        [Theory, MemberData(nameof(AddStrategyReturnFalseData))]
+        public async Task AddStrategy_InvalidStrategy_ReturnsFalse(TradingStrategyDto tradingStrategy)
         {
             //Arrange
-            var tradingStrategy = GetTradingStrategy();
-            tradingStrategy = null;
-            var result = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
-            //Act and Assert
-            Assert.False(result);
-        }
-        [Fact]
-        public async Task AddStrategy_InValidQuantity_ReturnsFalse()
-        {
-            //Arrange
-            var tradingStrategy = GetTradingStrategy();
-            tradingStrategy.Quantity = 0;
-            var result = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
-            //Act and Assert
-            Assert.False(result);
-        }
-        [Theory]
-        [InlineData("ab")]
-        [InlineData("abcdef")]
-        [InlineData(null)]
-        [InlineData("wrong")]
-        public async Task AddStrategy_InValidTicker_ReturnsFalse(string ticker)
-        {
-            //Arrange
-            var tradingStrategy = GetTradingStrategy();
-            tradingStrategy.Ticker = ticker;
-            var result = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
-            //Act and Assert
-            Assert.False(result);
-        }
-        [Fact]
-        public async Task AddStrategy_InValidPriceChange_ReturnsFalse()
-        {
-            //Arrange
-            var tradingStrategy = GetTradingStrategy();
-            tradingStrategy.PriceChange = 0;
             var result = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
             //Act and Assert
             Assert.False(result);
