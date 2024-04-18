@@ -67,6 +67,7 @@ namespace AutoTradeSystemTests
                 new object[] { new TradingStrategyDto() { Ticker = "TEST", PriceChange = 0, Quantity = 10, TradeAction = TradeAction.Buy } },
                 new object[] { new TradingStrategyDto() { Ticker = "TEST", PriceChange = 10, Quantity = 0, TradeAction = TradeAction.Buy } },
                 new object[] { new TradingStrategyDto() { Ticker = "ab", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy } },
+                new object[] { new TradingStrategyDto() { Ticker = "", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy } },
                 new object[] { new TradingStrategyDto() { Ticker = "abcdef", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy } },
                 new object[] { new TradingStrategyDto() { Ticker = null, PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy } },
 
@@ -83,6 +84,7 @@ namespace AutoTradeSystemTests
         [Theory]
         [InlineData(null)]
         [InlineData("")]
+        [InlineData("wrong")]
         public async Task RemoveStrategy_InValidID_ReturnsFalse(string ID)
         {
             //Arrange
