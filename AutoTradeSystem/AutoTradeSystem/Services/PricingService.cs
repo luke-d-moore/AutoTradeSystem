@@ -6,7 +6,7 @@
         //These would be accessed from the database, but here I have hardcoded for testing
         public async Task<decimal> GetCurrentPrice(string Ticker)
         {
-            await Task.Delay(100);
+            await Task.Delay(1);
             if (_tickers.Contains(Ticker, StringComparer.OrdinalIgnoreCase))
             {
                 var rand = new Random();

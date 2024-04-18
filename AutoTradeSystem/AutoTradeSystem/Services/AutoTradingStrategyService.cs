@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 
 namespace AutoTradeSystem.Services
 {
-    internal class AutoTradingStrategyService : AutoTradingStrategyServiceBase, IAutoTradingStrategyService
+    public class AutoTradingStrategyService : AutoTradingStrategyServiceBase, IAutoTradingStrategyService
     {
         private const int CheckRateMilliseconds = 5000;
         private readonly ILogger<AutoTradingStrategyService> _logger;
@@ -25,7 +25,7 @@ namespace AutoTradeSystem.Services
 
         private async Task GetCurrentPrices()
         {
-            await Task.Delay(10);
+            await Task.Delay(1);
             Parallel.ForEach(_CurrentPrices, async currentPrice =>
             {
                 var price = await GetCurrentPrice(currentPrice.Key);
@@ -132,7 +132,7 @@ namespace AutoTradeSystem.Services
         }
         public async Task<bool> RemoveStrategy(string ID)
         {
-            await Task.Delay(100);
+            await Task.Delay(1);
             var removed =_Strategies.Remove(ID);
 
             if (removed)

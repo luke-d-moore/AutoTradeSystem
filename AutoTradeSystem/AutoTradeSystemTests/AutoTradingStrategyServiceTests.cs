@@ -1,53 +1,104 @@
 using AutoTradeSystem;
+using AutoTradeSystem.Dtos;
+using AutoTradeSystem.Services;
+using Microsoft.Extensions.Logging;
+using Moq;
 namespace AutoTradeSystemTests
 {
     public class AutoTradingStrategyServiceTests
     {
-        //Fill in the tests to cover all test cases
+        private readonly IPricingService _pricingService;
+        private readonly ILogger<AutoTradingStrategyService> _logger;
+        private readonly IAutoTradingStrategyService _autoTradingStrategyService;
+
+        public AutoTradingStrategyServiceTests()
+        {
+            _pricingService = new PricingService();
+            _logger = new Mock<ILogger<AutoTradingStrategyService>>().Object;
+            _autoTradingStrategyService = new AutoTradingStrategyService(_logger, _pricingService);
+        }
         [Fact]
         public void GetStrategies_NoStrategies_ReturnsZeroStrategies()
         {
-            Assert.True(true);
+            //Arrange
+            var result = _autoTradingStrategyService.GetStrategies();
+            //Act and Assert
+            Assert.True(result.Count == 0);
         }
         [Fact]
-        public void GetStrategies_OneStrategy_ReturnsOneStrategy()
+        public async Task GetStrategies_OneStrategy_ReturnsOneStrategy()
         {
-            Assert.True(true);
+            //Arrange
+            var tradingStrategy = new TradingStrategyDto() { Ticker = "TEST", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy };
+            await _autoTradingStrategyService.AddStrategy(tradingStrategy);
+            var result = _autoTradingStrategyService.GetStrategies();
+            //Act and Assert
+            Assert.True(result.Count == 1);
         }
         [Fact]
-        public void AddStrategy_ValidStrategy_ReturnsTrue()
+        public async Task AddStrategy_ValidStrategy_ReturnsTrue()
         {
-            Assert.True(true);
+            //Arrange
+            var tradingStrategy = new TradingStrategyDto() { Ticker = "TEST", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy };
+            var result = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
+            //Act and Assert
+            Assert.True(result);
         }
         [Fact]
-        public void AddStrategy_NullStrategy_ReturnsFalse()
+        public async Task RemoveStrategy_ValidID_ReturnsTrue()
         {
-            Assert.False(false);
+            //Arrange
+            var tradingStrategy = new TradingStrategyDto() { Ticker = "TEST", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy };
+            await _autoTradingStrategyService.AddStrategy(tradingStrategy);
+            var ID = _autoTradingStrategyService.GetStrategies().Keys.First();
+            var resultRemove = await _autoTradingStrategyService.RemoveStrategy(ID);
+            //Act and Assert
+            Assert.True(resultRemove);
         }
         [Fact]
-        public void AddStrategy_InValidQuantity_ReturnsFalse()
+        public async Task AddStrategy_NullStrategy_ReturnsFalse()
         {
-            Assert.False(false);
+            //Arrange
+            var tradingStrategy = new TradingStrategyDto();
+            tradingStrategy = null;
+            var result = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
+            //Act and Assert
+            Assert.False(result);
         }
         [Fact]
-        public void AddStrategy_InValidTicker_ReturnsFalse()
+        public async Task AddStrategy_InValidQuantity_ReturnsFalse()
         {
-            Assert.False(false);
+            //Arrange
+            var tradingStrategy = new TradingStrategyDto() { Ticker = "TEST", PriceChange = 10, Quantity = 0, TradeAction = TradeAction.Buy };
+            var result = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
+            //Act and Assert
+            Assert.False(result);
         }
         [Fact]
-        public void AddStrategy_InValidPriceChange_ReturnsFalse()
+        public async Task AddStrategy_InValidTicker_ReturnsFalse()
         {
-            Assert.False(false);
+            //Arrange
+            var tradingStrategy = new TradingStrategyDto() { Ticker = "wrong", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy };
+            var result = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
+            //Act and Assert
+            Assert.False(result);
         }
         [Fact]
-        public void RemoveStrategy_ValidID_ReturnsTrue()
+        public async Task AddStrategy_InValidPriceChange_ReturnsFalse()
         {
-            Assert.True(true);
+            //Arrange
+            var tradingStrategy = new TradingStrategyDto() { Ticker = "TEST", PriceChange = 0, Quantity = 10, TradeAction = TradeAction.Buy };
+            var result = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
+            //Act and Assert
+            Assert.False(result);
         }
         [Fact]
-        public void RemoveStrategy_InValidID_ReturnsFalse()
+        public async Task RemoveStrategy_InValidID_ReturnsFalse()
         {
-            Assert.False(false);
+            //Arrange
+            var result = await _autoTradingStrategyService.RemoveStrategy("");
+            //Act and Assert
+            Assert.False(result);
         }
     }
 }
