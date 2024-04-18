@@ -89,6 +89,18 @@ namespace AutoTradeSystemTests
             //Act and Assert
             Assert.False(result);
         }
+        [Theory]
+        [InlineData("ab")]
+        [InlineData("abcdef")]
+        public async Task AddStrategy_InValidTickerLength_ReturnsFalse(string ticker)
+        {
+            //Arrange
+            var tradingStrategy = GetTradingStrategy();
+            tradingStrategy.Ticker = ticker;
+            var result = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
+            //Act and Assert
+            Assert.False(result);
+        }
         [Fact]
         public async Task AddStrategy_NullTicker_ReturnsFalse()
         {
