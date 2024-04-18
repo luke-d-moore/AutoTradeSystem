@@ -79,34 +79,16 @@ namespace AutoTradeSystemTests
             //Act and Assert
             Assert.False(result);
         }
-        [Fact]
-        public async Task AddStrategy_InValidTicker_ReturnsFalse()
-        {
-            //Arrange
-            var tradingStrategy = GetTradingStrategy();
-            tradingStrategy.Ticker = "wrong"; 
-            var result = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
-            //Act and Assert
-            Assert.False(result);
-        }
         [Theory]
         [InlineData("ab")]
         [InlineData("abcdef")]
-        public async Task AddStrategy_InValidTickerLength_ReturnsFalse(string ticker)
+        [InlineData(null)]
+        [InlineData("wrong")]
+        public async Task AddStrategy_InValidTicker_ReturnsFalse(string ticker)
         {
             //Arrange
             var tradingStrategy = GetTradingStrategy();
             tradingStrategy.Ticker = ticker;
-            var result = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
-            //Act and Assert
-            Assert.False(result);
-        }
-        [Fact]
-        public async Task AddStrategy_NullTicker_ReturnsFalse()
-        {
-            //Arrange
-            var tradingStrategy = GetTradingStrategy();
-            tradingStrategy.Ticker = null;
             var result = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
             //Act and Assert
             Assert.False(result);
@@ -121,19 +103,13 @@ namespace AutoTradeSystemTests
             //Act and Assert
             Assert.False(result);
         }
-        [Fact]
-        public async Task RemoveStrategy_InValidID_ReturnsFalse()
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        public async Task RemoveStrategy_InValidID_ReturnsFalse(string ID)
         {
             //Arrange
-            var result = await _autoTradingStrategyService.RemoveStrategy("");
-            //Act and Assert
-            Assert.False(result);
-        }
-        [Fact]
-        public async Task RemoveStrategy_NullID_ReturnsFalse()
-        {
-            //Arrange
-            var result = await _autoTradingStrategyService.RemoveStrategy(null);
+            var result = await _autoTradingStrategyService.RemoveStrategy(ID);
             //Act and Assert
             Assert.False(result);
         }
