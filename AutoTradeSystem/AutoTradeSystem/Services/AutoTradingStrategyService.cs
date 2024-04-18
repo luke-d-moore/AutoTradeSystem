@@ -133,6 +133,7 @@ namespace AutoTradeSystem.Services
         public async Task<bool> RemoveStrategy(string ID)
         {
             await Task.Delay(1);
+            if(ID == null) return false;
             var removed =_Strategies.Remove(ID);
 
             if (removed)

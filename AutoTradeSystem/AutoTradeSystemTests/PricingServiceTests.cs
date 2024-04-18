@@ -29,6 +29,14 @@ namespace AutoTradeSystemTests
             Assert.ThrowsAsync(exceptionType, async () => await _pricingService.GetCurrentPrice("wrong"));
         }
         [Fact]
+        public void GetCurrentPrice_NullTicker_ThrowsArgumentException()
+        {
+            // Arrange
+            var exceptionType = typeof(ArgumentException);
+            // Act and Assert
+            Assert.ThrowsAsync(exceptionType, async () => await _pricingService.GetCurrentPrice(null));
+        }
+        [Fact]
         public void Buy_Valid_ReturnsDecimal()
         {
             //Arrange
@@ -43,6 +51,14 @@ namespace AutoTradeSystemTests
             var exceptionType = typeof(ArgumentException);
             // Act and Assert
             Assert.Throws(exceptionType, () => _pricingService.Buy("wrong",10, 100,90));
+        }
+        [Fact]
+        public void Buy_NullTicker_ThrowsArgumentException()
+        {
+            // Arrange
+            var exceptionType = typeof(ArgumentException);
+            // Act and Assert
+            Assert.Throws(exceptionType, () => _pricingService.Buy(null, 10, 100, 90));
         }
         [Fact]
         public void Buy_InValidQuantity_ThrowsArgumentOutOfRangeException()
@@ -67,6 +83,14 @@ namespace AutoTradeSystemTests
             var exceptionType = typeof(ArgumentException);
             // Act and Assert
             Assert.Throws(exceptionType, () => _pricingService.Sell("wrong", 10, 100, 110));
+        }
+        [Fact]
+        public void Sell_NullTicker_ThrowsArgumentException()
+        {
+            // Arrange
+            var exceptionType = typeof(ArgumentException);
+            // Act and Assert
+            Assert.Throws(exceptionType, () => _pricingService.Sell(null, 10, 100, 110));
         }
         [Fact]
         public void Sell_InValidQuantity_ThrowsArgumentOutOfRangeException()

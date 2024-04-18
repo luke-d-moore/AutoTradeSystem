@@ -90,6 +90,16 @@ namespace AutoTradeSystemTests
             Assert.False(result);
         }
         [Fact]
+        public async Task AddStrategy_NullTicker_ReturnsFalse()
+        {
+            //Arrange
+            var tradingStrategy = GetTradingStrategy();
+            tradingStrategy.Ticker = null;
+            var result = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
+            //Act and Assert
+            Assert.False(result);
+        }
+        [Fact]
         public async Task AddStrategy_InValidPriceChange_ReturnsFalse()
         {
             //Arrange
@@ -104,6 +114,14 @@ namespace AutoTradeSystemTests
         {
             //Arrange
             var result = await _autoTradingStrategyService.RemoveStrategy("");
+            //Act and Assert
+            Assert.False(result);
+        }
+        [Fact]
+        public async Task RemoveStrategy_NullID_ReturnsFalse()
+        {
+            //Arrange
+            var result = await _autoTradingStrategyService.RemoveStrategy(null);
             //Act and Assert
             Assert.False(result);
         }
