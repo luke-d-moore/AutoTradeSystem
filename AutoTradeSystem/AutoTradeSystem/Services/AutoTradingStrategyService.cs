@@ -142,7 +142,7 @@ namespace AutoTradeSystem.Services
             }
             else
             {
-                _logger.LogError("Failed to Add Strategy {0}", ID);
+                _logger.LogError("Failed to Remove Strategy {0}", ID);
             }
 
             return removed; 
