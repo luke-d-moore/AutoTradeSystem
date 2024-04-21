@@ -111,5 +111,54 @@ namespace AutoTradeSystemTests
             //Act and Assert
             Assert.False(result);
         }
+
+        public static IEnumerable<object[]> UpdateStrategyNullData =>
+        new List<object[]>
+        {
+                new object[] { null, new TradingStrategyDto()},
+                new object[] { "", new TradingStrategyDto()},
+                new object[] { "abc", null}
+        };
+
+        [Theory, MemberData(nameof(UpdateStrategyNullData))]
+        public async Task UpdateStrategy_NullData_ReturnsFalse(string ID, TradingStrategyDto updatedStrategy)
+        {
+            //Arrange
+            var resultUpdate = await _autoTradingStrategyService.UpdateStrategy(ID, updatedStrategy);
+            //Act and Assert
+            Assert.False(resultUpdate);
+        }
+        public static IEnumerable<object[]> UpdateStrategyReturnFalseData =>
+            new List<object[]>
+            {
+                new object[] {new TradingStrategyDto() { Ticker = "TEST", PriceChange = 0, Quantity = 10, TradeAction = TradeAction.Buy } },
+                new object[] {new TradingStrategyDto() { Ticker = "TEST", PriceChange = 10, Quantity = 0, TradeAction = TradeAction.Buy } },
+                new object[] {new TradingStrategyDto() { Ticker = "TEST", PriceChange = 10, Quantity = -5, TradeAction = TradeAction.Buy } },
+                new object[] {new TradingStrategyDto() { Ticker = "TEST", PriceChange = -10, Quantity = 10, TradeAction = TradeAction.Buy } }
+            };
+
+        [Theory, MemberData(nameof(UpdateStrategyReturnFalseData))]
+        public async Task UpdateStrategy_InValidData_ReturnsFalse(TradingStrategyDto updatedStrategy)
+        {
+            //Arrange
+            var newTradingStrategy = GetTradingStrategy();
+            await _autoTradingStrategyService.AddStrategy(newTradingStrategy);
+            var newID = _autoTradingStrategyService.GetStrategies().Keys.First();
+            var resultUpdate = await _autoTradingStrategyService.UpdateStrategy(newID, updatedStrategy);
+            //Act and Assert
+            Assert.False(resultUpdate);
+        }
+
+        [Fact]        
+        public async Task UpdateStrategy_InValidIDData_ReturnsFalse()
+        {
+            //Arrange
+            var ID = "abc";
+            var newTradingStrategy = GetTradingStrategy();
+            await _autoTradingStrategyService.AddStrategy(newTradingStrategy);
+            var resultUpdate = await _autoTradingStrategyService.UpdateStrategy(ID, newTradingStrategy);
+            //Act and Assert
+            Assert.False(resultUpdate);
+        }
     }
 }

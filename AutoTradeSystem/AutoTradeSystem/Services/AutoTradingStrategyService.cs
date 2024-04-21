@@ -149,7 +149,7 @@ namespace AutoTradeSystem.Services
         }
         public async Task<bool> UpdateStrategy(string ID, TradingStrategyDto tradingStrategy)
         {
-            if (ID == null)
+            if (string.IsNullOrEmpty(ID))
             {
                 _logger.LogError("Failed to Update Strategy, ID was null");
                 return false;
@@ -157,6 +157,16 @@ namespace AutoTradeSystem.Services
             if (tradingStrategy == null)
             {
                 _logger.LogError("Failed to Update Strategy, tradingStrategy was null");
+                return false;
+            }
+            if (tradingStrategy.PriceChange <= 0)
+            {
+                _logger.LogError("Failed to Update Strategy, Price change must be greater than 0");
+                return false;
+            }
+            if (tradingStrategy.Quantity <= 0)
+            {
+                _logger.LogError("Failed to Update Strategy, Quantity must be greater than 0");
                 return false;
             }
             var currentStrategy = new TradingStrategy();
