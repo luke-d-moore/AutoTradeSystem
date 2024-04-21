@@ -83,7 +83,7 @@ namespace AutoTradeSystem.Services
             return added;
         }
 
-        private async Task<(decimal? ActionPrice, decimal? OriginalPrice)> GetActionPrice(TradingStrategyDto tradingStrategy)
+        private async Task<(decimal? ActionPrice, decimal? OriginalPrice)> GetActionPrice(TradingStrategyDto tradingStrategy, decimal OriginalPrice = 0)
         {
             //we need to keep a record of the price that we will action the strategy
             //PriceMovement is a percentage
@@ -97,7 +97,7 @@ namespace AutoTradeSystem.Services
 
             decimal multiplyfactor = (100 + movement) / 100.0m;
 
-            decimal? quote = await GetCurrentPrice(tradingStrategy.Ticker);
+            decimal? quote = OriginalPrice == 0 ? await GetCurrentPrice(tradingStrategy.Ticker) : OriginalPrice;
 
             if(quote == null) return (null, null);
 
@@ -146,6 +146,41 @@ namespace AutoTradeSystem.Services
             }
 
             return removed; 
+        }
+        public async Task<bool> UpdateStrategy(string ID, TradingStrategyDto tradingStrategy)
+        {
+            if (ID == null)
+            {
+                _logger.LogError("Failed to Update Strategy, ID was null");
+                return false;
+            }
+            if (tradingStrategy == null)
+            {
+                _logger.LogError("Failed to Update Strategy, tradingStrategy was null");
+                return false;
+            }
+            var currentStrategy = new TradingStrategy();
+            if (!_Strategies.TryGetValue(ID, out currentStrategy))
+            {
+                _logger.LogError("Failed to Update Strategy, ID was not found : {0}", ID);
+                return false;
+            }
+
+            var newActionPrice = await (GetActionPrice(tradingStrategy, currentStrategy.OriginalPrice));
+            if (!newActionPrice.ActionPrice.HasValue)
+            {
+                _logger.LogError("Failed to Update Strategy, update ActionPrice Failed {@strategy}", tradingStrategy);
+                return false;
+            }
+
+            currentStrategy.TradingStrategyDto.TradeAction = tradingStrategy.TradeAction;
+            currentStrategy.TradingStrategyDto.Quantity = tradingStrategy.Quantity;
+            currentStrategy.TradingStrategyDto.PriceChange = tradingStrategy.PriceChange;
+            currentStrategy.ActionPrice = newActionPrice.ActionPrice.Value;
+
+            _logger.LogInformation("Strategy Updated Successfully {0}", ID);
+
+            return true;
         }
 
         private void RemoveStrategies(IList<string> IdsToRemove)

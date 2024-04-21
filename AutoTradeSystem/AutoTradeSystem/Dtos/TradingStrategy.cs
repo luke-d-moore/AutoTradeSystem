@@ -2,6 +2,7 @@
 {
     public class TradingStrategy
     {
+        public TradingStrategy() { }
         public TradingStrategy(decimal price, TradingStrategyDto tradingStrategyDto, decimal originalPrice) 
         {
             ActionPrice = price;

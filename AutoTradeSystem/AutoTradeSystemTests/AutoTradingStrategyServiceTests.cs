@@ -59,6 +59,25 @@ namespace AutoTradeSystemTests
             //Act and Assert
             Assert.True(resultRemove);
         }
+        [Fact]
+        public async Task UpdateStrategy_ValidID_ReturnsTrue()
+        {
+            //Arrange
+            var tradingStrategy = GetTradingStrategy();
+            var updatedStrategy = GetTradingStrategy();
+            updatedStrategy.Quantity = 100;
+            updatedStrategy.TradeAction = TradeAction.Sell;
+            updatedStrategy.PriceChange = 5;
+            await _autoTradingStrategyService.AddStrategy(tradingStrategy);
+            var ID = _autoTradingStrategyService.GetStrategies().Keys.First();
+            var resultUpdate = await _autoTradingStrategyService.UpdateStrategy(ID, updatedStrategy);
+            var updatedStrategyFromService = _autoTradingStrategyService.GetStrategies().First(x => x.Key == ID).Value;
+            //Act and Assert
+            Assert.True(resultUpdate);
+            Assert.True(updatedStrategyFromService.TradingStrategyDto.Quantity == updatedStrategy.Quantity);
+            Assert.True(updatedStrategyFromService.TradingStrategyDto.TradeAction == updatedStrategy.TradeAction);
+            Assert.True(updatedStrategyFromService.TradingStrategyDto.PriceChange == updatedStrategy.PriceChange);
+        }
         public static IEnumerable<object[]> AddStrategyReturnFalseData =>
             new List<object[]>
             {

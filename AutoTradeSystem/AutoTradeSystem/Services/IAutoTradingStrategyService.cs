@@ -7,6 +7,7 @@ namespace AutoTradeSystem.Services
         IDictionary<string, TradingStrategy> GetStrategies();
         Task<bool> AddStrategy(TradingStrategyDto strategyDetails);
         Task<bool> RemoveStrategy(string ID);
+        Task<bool> UpdateStrategy(string ID, TradingStrategyDto strategyDetails);
 
     }
 }

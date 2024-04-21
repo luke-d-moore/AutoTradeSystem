@@ -72,6 +72,38 @@ namespace AutoTradeSystem.Controllers
         }
 
         // DELETE api/<TradingStrategyController>/5
+        [HttpPost]
+        [SwaggerOperation(nameof(UpdateStrategy))]
+        [SwaggerResponse(StatusCodes.Status200OK, "OK")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Not Found")]
+        public async Task<ActionResult<UpdateStrategyResponse>> UpdateStrategy(string id, TradingStrategyDto tradingStrategy)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                _logger.LogError("Invalid ID {0}", id);
+                return BadRequest("Invalid ID");
+            }
+            var updated = await _autoTradingStrategyService.UpdateStrategy(id, tradingStrategy);
+            if (updated)
+            {
+                _logger.LogInformation("Strategy Updated Successfully");
+            }
+            else
+            {
+                _logger.LogError("Failed To Update Strategy {0}", id);
+            }
+
+            if (updated)
+            {
+                return Ok(new UpdateStrategyResponse(true, "Strategy Updated Successfully", id, tradingStrategy));
+            }
+            else
+            {
+                return BadRequest(new UpdateStrategyResponse(false, "Failed To Update Strategy", id, tradingStrategy));
+            }
+        }
+
+        // DELETE api/<TradingStrategyController>/5
         [HttpDelete("{id}")]
         [SwaggerOperation(nameof(DeleteStrategy))]
         [SwaggerResponse(StatusCodes.Status200OK, "OK")]
