@@ -1,16 +1,40 @@
-﻿namespace AutoTradeSystem.Services
+﻿using System.Collections.Concurrent;
+
+namespace AutoTradeSystem.Services
 {
     public class PricingService : IPricingService
     {
-        private readonly List<string> _tickers = new List<string>() { "ABC", "GOOGL", "AMZN", "TEST"};
+        private readonly ConcurrentDictionary<string, decimal> _tickers = new ConcurrentDictionary<string, decimal>(
+            new Dictionary<string, decimal>()
+        {
+            { "ABC", 50.00m },
+            { "GOOGL", 100.00m },
+            { "AMZN", 100.00m },
+            { "TEST", 75.00m }
+        });
         //These would be accessed from the database, but here I have hardcoded for testing
+        private bool PriceIncreases(Random random) 
+        {
+            return random.NextDouble() > 0.5;
+        }
         public async Task<decimal> GetCurrentPrice(string Ticker)
         {
             await Task.Delay(1);
-            if (_tickers.Contains(Ticker, StringComparer.OrdinalIgnoreCase))
+            var ticker = Ticker.ToUpper();
+            if (_tickers.Keys.Contains(ticker))
             {
                 var rand = new Random();
-                return new decimal(rand.NextDouble()*100.0);
+                var percChange = new decimal(rand.NextDouble()/100);
+                var currentPrice = _tickers[ticker];
+                if (PriceIncreases(rand))
+                {
+                    _tickers[ticker] += currentPrice * percChange;
+                }
+                else
+                {
+                    _tickers[ticker] -= currentPrice * percChange;
+                }
+                return _tickers[ticker];
             }
             else
             {
@@ -20,7 +44,7 @@
         }
         public decimal Buy(string Ticker, int Quantity, decimal OriginalPrice, decimal CurrentPrice)
         {
-            if (!_tickers.Contains(Ticker, StringComparer.OrdinalIgnoreCase))
+            if (!_tickers.Keys.Contains(Ticker, StringComparer.OrdinalIgnoreCase))
             {
                 throw new ArgumentException("Invalid Ticker", "ticker");
             }
@@ -35,7 +59,7 @@
         }
         public decimal Sell(string Ticker, int Quantity, decimal OriginalPrice, decimal CurrentPrice)
         {
-            if (!_tickers.Contains(Ticker, StringComparer.OrdinalIgnoreCase))
+            if (!_tickers.Keys.Contains(Ticker, StringComparer.OrdinalIgnoreCase))
             {
                 throw new ArgumentException("Invalid Ticker", "ticker");
             }
