@@ -16,7 +16,7 @@ namespace AutoTradeSystem.Controllers
         private readonly ILogger<TradingStrategyController> _logger;
         private readonly IAutoTradingStrategyService _autoTradingStrategyService;
 
-        public TradingStrategyController(ILogger<TradingStrategyController> logger, IAutoTradingStrategyService autoTradingStrategyService)//, IHostedServiceAccessor<IAutoTradingStrategyService> autoTradingStrategyService) 
+        public TradingStrategyController(ILogger<TradingStrategyController> logger, IAutoTradingStrategyService autoTradingStrategyService)
         {
             _logger = logger;
             _autoTradingStrategyService = autoTradingStrategyService;
@@ -24,15 +24,17 @@ namespace AutoTradeSystem.Controllers
 
         // GET: api/<TradingStrategyController>
         [HttpGet]
-        public IActionResult Get()
+        public GetStrategiesResponse Get()
         {
-            return Ok(new GetStrategiesResponse(true, "Strategies Retrieved", _autoTradingStrategyService.GetStrategies()));
+            var response = new GetStrategiesResponse(true, "Strategies Retrieved", _autoTradingStrategyService.GetStrategies());
+            return response;
         }
 
         // POST api/<TradingStrategyController>
         [HttpPost]
         [SwaggerOperation(nameof(AddStrategy))]
-        [SwaggerResponse(StatusCodes.Status200OK, "OK", typeof(Response))]
+        [SwaggerResponse(StatusCodes.Status200OK, "OK", typeof(AddStrategyResponse))]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Not Found")]
         public async Task<ActionResult<AddStrategyResponse>> AddStrategy(TradingStrategyDto tradingStrategy)
         {
             if (tradingStrategy == null) return BadRequest("Invalid Strategy");
@@ -71,10 +73,10 @@ namespace AutoTradeSystem.Controllers
             }
         }
 
-        // DELETE api/<TradingStrategyController>/5
-        [HttpPost]
+        // UPDATE api/<TradingStrategyController>/5
+        [HttpPut]
         [SwaggerOperation(nameof(UpdateStrategy))]
-        [SwaggerResponse(StatusCodes.Status200OK, "OK")]
+        [SwaggerResponse(StatusCodes.Status200OK, "OK", typeof(UpdateStrategyResponse))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "Not Found")]
         public async Task<ActionResult<UpdateStrategyResponse>> UpdateStrategy(string id, TradingStrategyDto tradingStrategy)
         {
@@ -106,7 +108,7 @@ namespace AutoTradeSystem.Controllers
         // DELETE api/<TradingStrategyController>/5
         [HttpDelete("{id}")]
         [SwaggerOperation(nameof(DeleteStrategy))]
-        [SwaggerResponse(StatusCodes.Status200OK, "OK")]
+        [SwaggerResponse(StatusCodes.Status200OK, "OK", typeof(RemoveStrategyResponse))]
         [SwaggerResponse(StatusCodes.Status404NotFound, "Not Found")]
         public async Task<ActionResult<RemoveStrategyResponse>> DeleteStrategy(string id)
         {

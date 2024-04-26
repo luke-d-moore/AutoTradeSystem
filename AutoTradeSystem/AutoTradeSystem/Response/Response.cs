@@ -1,10 +1,10 @@
 ﻿namespace AutoTradeSystem
 {
-    public abstract class Response
+    public class Response
     {
-        readonly bool Success;
-        readonly string Message;
-        readonly DateTime TimeStamp;
+        public bool Success;
+        public string Message;
+        public DateTime TimeStamp;
         protected Response(bool success, string message) 
         { 
             Success = success;
