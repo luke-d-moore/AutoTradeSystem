@@ -24,18 +24,20 @@ namespace AutoTradeSystem.Controllers
 
         // GET: api/<TradingStrategyController>
         [HttpGet]
-        public GetStrategiesResponse Get()
+        [SwaggerOperation(nameof(Get))]
+        [SwaggerResponse(StatusCodes.Status200OK, "OK")]
+        public IActionResult Get()
         {
             var response = new GetStrategiesResponse(true, "Strategies Retrieved", _autoTradingStrategyService.GetStrategies());
-            return response;
+            return Ok(response);
         }
 
         // POST api/<TradingStrategyController>
         [HttpPost]
         [SwaggerOperation(nameof(AddStrategy))]
-        [SwaggerResponse(StatusCodes.Status200OK, "OK", typeof(AddStrategyResponse))]
+        [SwaggerResponse(StatusCodes.Status200OK, "OK")]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "Not Found")]
-        public async Task<ActionResult<AddStrategyResponse>> AddStrategy(TradingStrategyDto tradingStrategy)
+        public async Task<IActionResult> AddStrategy(TradingStrategyDto tradingStrategy)
         {
             if (tradingStrategy == null) return BadRequest("Invalid Strategy");
             if (tradingStrategy.Ticker == null || (tradingStrategy.Ticker.Length > 5 || tradingStrategy.Ticker.Length < 3))
@@ -65,7 +67,7 @@ namespace AutoTradeSystem.Controllers
 
             if (added)
             {
-                return Ok(new AddStrategyResponse(true, "Strategy Added Successfully", tradingStrategy));
+                return CreatedAtAction("AddStrategy", new AddStrategyResponse(true, "Strategy Added Successfully", tradingStrategy));
             }
             else
             {
@@ -76,9 +78,9 @@ namespace AutoTradeSystem.Controllers
         // UPDATE api/<TradingStrategyController>/5
         [HttpPut]
         [SwaggerOperation(nameof(UpdateStrategy))]
-        [SwaggerResponse(StatusCodes.Status200OK, "OK", typeof(UpdateStrategyResponse))]
+        [SwaggerResponse(StatusCodes.Status200OK, "OK")]
         [SwaggerResponse(StatusCodes.Status404NotFound, "Not Found")]
-        public async Task<ActionResult<UpdateStrategyResponse>> UpdateStrategy(string id, TradingStrategyDto tradingStrategy)
+        public async Task<IActionResult> UpdateStrategy(string id, TradingStrategyDto tradingStrategy)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -108,9 +110,9 @@ namespace AutoTradeSystem.Controllers
         // DELETE api/<TradingStrategyController>/5
         [HttpDelete("{id}")]
         [SwaggerOperation(nameof(DeleteStrategy))]
-        [SwaggerResponse(StatusCodes.Status200OK, "OK", typeof(RemoveStrategyResponse))]
+        [SwaggerResponse(StatusCodes.Status200OK, "OK")]
         [SwaggerResponse(StatusCodes.Status404NotFound, "Not Found")]
-        public async Task<ActionResult<RemoveStrategyResponse>> DeleteStrategy(string id)
+        public async Task<IActionResult> DeleteStrategy(string id)
         {
             if (string.IsNullOrEmpty(id))
             {
