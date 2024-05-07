@@ -9,14 +9,12 @@ namespace AutoTradeSystem.Services
         private readonly ILogger<AutoTradingStrategyService> _logger;
         private readonly IDictionary<string, TradingStrategy> _Strategies = new ConcurrentDictionary<string, TradingStrategy>();
         private readonly object _CheckStrategiesLock = new object();
-        private readonly IPricingService _pricingService;
         private readonly IDictionary<string, decimal> _CurrentPrices = new ConcurrentDictionary<string, decimal>();
 
         public AutoTradingStrategyService(ILogger<AutoTradingStrategyService> logger, IPricingService pricingService)
-            : base(CheckRateMilliseconds, logger)
+            : base(CheckRateMilliseconds, logger, pricingService)
         {
             _logger = logger;
-            _pricingService = pricingService;
         }
         public IDictionary<string, TradingStrategy> GetStrategies()
         {
@@ -104,32 +102,6 @@ namespace AutoTradeSystem.Services
             return (quote * multiplyfactor, quote);
         }
 
-        private async Task<decimal?> GetCurrentPrice(string ticker)
-        {
-            //we need to keep a record of the price that we will action the strategy
-            //PriceMovement is a percentage
-            //if Buy then % is a decrease
-            //if Sell then % is an increase
-
-            decimal quote;
-
-            try
-            {
-                quote = await _pricingService.GetCurrentPrice(ticker);
-            }
-            catch (ArgumentException ex)
-            {
-                _logger.LogError(ex, "Invalid Ticker {0}", ticker);
-                return null;
-            }
-            catch(Exception ex)
-            {
-                _logger.LogError(ex, "Exception Thrown");
-                return null;
-            }
-
-            return quote;
-        }
         public async Task<bool> RemoveStrategy(string ID)
         {
             await Task.Delay(1);

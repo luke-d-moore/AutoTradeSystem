@@ -72,5 +72,10 @@ namespace AutoTradeSystem.Services
 
             return Difference * Quantity;
         }
+
+        public IDictionary<string, decimal> GetTickers()
+        {
+            return _tickers;
+        }
     }
 }
