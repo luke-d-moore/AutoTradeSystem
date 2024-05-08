@@ -8,8 +8,6 @@ namespace AutoTradeSystem.Services
         private const int CheckRateMilliseconds = 5000;
         private readonly ILogger<AutoTradingStrategyService> _logger;
         private readonly IDictionary<string, TradingStrategy> _Strategies = new ConcurrentDictionary<string, TradingStrategy>();
-        private readonly object _CheckStrategiesLock = new object();
-        private readonly IDictionary<string, decimal> _CurrentPrices = new ConcurrentDictionary<string, decimal>();
 
         public AutoTradingStrategyService(ILogger<AutoTradingStrategyService> logger, IPricingService pricingService)
             : base(CheckRateMilliseconds, logger, pricingService)
@@ -19,21 +17,6 @@ namespace AutoTradeSystem.Services
         public IDictionary<string, TradingStrategy> GetStrategies()
         {
             return _Strategies;
-        }
-
-        private async Task GetCurrentPrices()
-        {
-            await Task.Delay(1);
-            Parallel.ForEach(_CurrentPrices, async currentPrice =>
-            {
-                var price = await GetCurrentPrice(currentPrice.Key);
-                if (price == null)
-                {
-                    _logger.LogInformation("Failed to get current price for {0}", currentPrice.Key);
-                    return;
-                }
-                _CurrentPrices[currentPrice.Key] = price.Value;
-            });
         }
 
         public async Task<bool> AddStrategy(TradingStrategyDto tradingStrategy)
@@ -57,8 +40,6 @@ namespace AutoTradeSystem.Services
             {
                 return false;
             }
-
-            _CurrentPrices.TryAdd(tradingStrategy.Ticker, actionPrice.OriginalPrice.Value);
 
             var id = Guid.NewGuid().ToString();
 
@@ -181,66 +162,63 @@ namespace AutoTradeSystem.Services
         }
         protected async override Task<int> CheckTradingStrategies()
         {
-            await GetCurrentPrices();
+            var IDsToRemove = new List<string>();
 
-            lock (_CheckStrategiesLock)
+            foreach(var strategy in _Strategies)
             {
-                var IDsToRemove = new List<string>();
 
-                foreach(var strategy in _Strategies)
+                var currentPrice = await GetCurrentPrice(strategy.Value.TradingStrategyDto.Ticker);
+
+                if(currentPrice == null) continue;
+
+                if (currentPrice.Value >= strategy.Value.ActionPrice && strategy.Value.TradingStrategyDto.TradeAction == TradeAction.Sell)
                 {
-
-                    var currentPrice = _CurrentPrices[strategy.Value.TradingStrategyDto.Ticker];
-
-                    if (currentPrice >= strategy.Value.ActionPrice && strategy.Value.TradingStrategyDto.TradeAction == TradeAction.Sell)
+                    try
                     {
-                        try
-                        {
-                            var profit = _pricingService.Sell(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.OriginalPrice, currentPrice);
-                            _logger.LogInformation("Successfully Executed Strategy for {@strategy} profit : {0}", strategy, profit);
-                            IDsToRemove.Add(strategy.Key);
-                            continue;
-                        }
-                        catch (ArgumentOutOfRangeException ex)
-                        {
-                            _logger.LogInformation(ex, "Failed to Execute Strategy for {@strategy}, Quantity was invalid", strategy);
-                        }
-                        catch (ArgumentException ex)
-                        {
-                            _logger.LogInformation(ex, "Failed to Execute Strategy for {@strategy}, Ticker was invalid", strategy);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogInformation(ex, "Failed to Execute Strategy for {@strategy}", strategy);
-                        }
+                        var profit = _pricingService.Sell(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.OriginalPrice, currentPrice.Value);
+                        _logger.LogInformation("Successfully Executed Strategy for {@strategy} profit : {0}", strategy, profit);
+                        IDsToRemove.Add(strategy.Key);
+                        continue;
                     }
-
-                    if (currentPrice <= strategy.Value.ActionPrice && strategy.Value.TradingStrategyDto.TradeAction == TradeAction.Buy)
+                    catch (ArgumentOutOfRangeException ex)
                     {
-                        try
-                        {
-                            var profit = _pricingService.Buy(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.OriginalPrice, currentPrice);
-                            _logger.LogInformation("Successfully Executed Strategy for {@strategy} profit : {0}", strategy, profit);
-                            IDsToRemove.Add(strategy.Key);
-                            continue;
-                        }
-                        catch (ArgumentOutOfRangeException ex)
-                        {
-                            _logger.LogInformation(ex, "Failed to Execute Strategy for {@strategy}, Quantity was invalid", strategy);
-                        }
-                        catch (ArgumentException ex)
-                        {
-                            _logger.LogInformation(ex, "Failed to Execute Strategy for {@strategy}, Ticker was invalid", strategy);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogInformation(ex, "Failed to Execute Strategy for {@strategy}", strategy);
-                        }
+                        _logger.LogInformation(ex, "Failed to Execute Strategy for {@strategy}, Quantity was invalid", strategy);
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        _logger.LogInformation(ex, "Failed to Execute Strategy for {@strategy}, Ticker was invalid", strategy);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogInformation(ex, "Failed to Execute Strategy for {@strategy}", strategy);
                     }
                 }
 
-                RemoveStrategies(IDsToRemove);
+                if (currentPrice <= strategy.Value.ActionPrice && strategy.Value.TradingStrategyDto.TradeAction == TradeAction.Buy)
+                {
+                    try
+                    {
+                        var profit = _pricingService.Buy(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.OriginalPrice, currentPrice.Value);
+                        _logger.LogInformation("Successfully Executed Strategy for {@strategy} profit : {0}", strategy, profit);
+                        IDsToRemove.Add(strategy.Key);
+                        continue;
+                    }
+                    catch (ArgumentOutOfRangeException ex)
+                    {
+                        _logger.LogInformation(ex, "Failed to Execute Strategy for {@strategy}, Quantity was invalid", strategy);
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        _logger.LogInformation(ex, "Failed to Execute Strategy for {@strategy}, Ticker was invalid", strategy);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogInformation(ex, "Failed to Execute Strategy for {@strategy}", strategy);
+                    }
+                }
             }
+
+            RemoveStrategies(IDsToRemove);
 
             return 0;
         }

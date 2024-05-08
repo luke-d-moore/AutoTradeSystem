@@ -6,7 +6,7 @@ namespace AutoTradeSystem.Services
 {
     public class HighFrequencyAutoTradingService : AutoTradingStrategyServiceBase, IHighFrequencyAutoTradingService
     {
-        private const int CheckRateMilliseconds = 500;
+        private const int CheckRateMilliseconds = 100;
         private decimal OriginalInvestment = 100000; // set the original invetsment to be 100,000.00
         private readonly ILogger<HighFrequencyAutoTradingService> _logger;
         private readonly IDictionary<string, HighFrequencyAssets> _CurrentAssets;
