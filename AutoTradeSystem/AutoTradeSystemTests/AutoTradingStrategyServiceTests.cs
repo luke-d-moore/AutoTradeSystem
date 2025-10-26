@@ -9,11 +9,13 @@ namespace AutoTradeSystemTests
     {
         private readonly IPricingService _pricingService;
         private readonly ILogger<AutoTradingStrategyService> _logger;
+        private readonly ILogger<PricingService> _priceLogger;
         private readonly IAutoTradingStrategyService _autoTradingStrategyService;
 
         public AutoTradingStrategyServiceTests()
         {
-            _pricingService = new PricingService();
+            _priceLogger = new Mock<ILogger<PricingService>>().Object;
+            _pricingService = new PricingService(_priceLogger);
             _logger = new Mock<ILogger<AutoTradingStrategyService>>().Object;
             _autoTradingStrategyService = new AutoTradingStrategyService(_logger, _pricingService);
         }

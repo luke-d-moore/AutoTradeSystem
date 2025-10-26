@@ -22,8 +22,9 @@ builder.Services.AddLogging(configure => { configure.AddSerilog(); });
 builder.Services.AddSingleton<IPricingService, PricingService>();
 builder.Services.AddSingleton<IAutoTradingStrategyService, AutoTradingStrategyService>();
 builder.Services.AddHostedService(p => p.GetRequiredService<IAutoTradingStrategyService>());
-builder.Services.AddSingleton<IHighFrequencyAutoTradingService, HighFrequencyAutoTradingService>();
-builder.Services.AddHostedService(p => p.GetRequiredService<IHighFrequencyAutoTradingService>());
+builder.Services.AddHostedService(p => p.GetRequiredService<IPricingService>());
+//builder.Services.AddSingleton<IHighFrequencyAutoTradingService, HighFrequencyAutoTradingService>();
+//builder.Services.AddHostedService(p => p.GetRequiredService<IHighFrequencyAutoTradingService>());
 
 
 var app = builder.Build();

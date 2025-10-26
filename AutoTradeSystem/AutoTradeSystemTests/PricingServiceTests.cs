@@ -1,6 +1,7 @@
 using AutoTradeSystem;
 using AutoTradeSystem.Dtos;
 using AutoTradeSystem.Services;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace AutoTradeSystemTests
@@ -8,10 +9,12 @@ namespace AutoTradeSystemTests
     public class PricingServiceTests
     {
         private readonly IPricingService _pricingService;
+        private readonly ILogger<PricingService> _priceLogger;
 
         public PricingServiceTests()
         {
-            _pricingService = new PricingService();
+            _priceLogger = new Mock<ILogger<PricingService>>().Object;
+            _pricingService = new PricingService(_priceLogger);
         }
         public static IEnumerable<object[]> TickerData =>
     new List<object[]>

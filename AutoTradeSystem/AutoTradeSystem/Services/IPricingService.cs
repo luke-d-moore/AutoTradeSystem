@@ -1,6 +1,6 @@
 ﻿namespace AutoTradeSystem.Services
 {
-    public interface IPricingService
+    public interface IPricingService : IHostedService
     {
         public IDictionary<string, decimal> GetTickers();
         public Task<decimal> GetCurrentPrice(string Ticker);

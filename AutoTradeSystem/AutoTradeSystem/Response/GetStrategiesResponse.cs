@@ -1,12 +1,14 @@
 ﻿using AutoTradeSystem;
 using AutoTradeSystem.Dtos;
+using System.Text.Json.Serialization;
 
 public class GetStrategiesResponse : Response
 {
-    public IDictionary<string, TradingStrategy> _TradingStrategies = new Dictionary<string, TradingStrategy>();
+    [JsonPropertyName("TradingStrategies")]
+    public IDictionary<string, TradingStrategy> TradingStrategies { get; set; }
     public GetStrategiesResponse(bool success, string message, IDictionary<string, TradingStrategy> tradingStrategies) : base(success, message)
     {
-        _TradingStrategies = tradingStrategies;
+        TradingStrategies = tradingStrategies;
     }
 }
 

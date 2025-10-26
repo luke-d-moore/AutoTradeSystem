@@ -1,10 +1,12 @@
 ﻿using AutoTradeSystem;
+using System.Text.Json.Serialization;
 
 public class RemoveStrategyResponse :Response
 {
-    readonly string _id;
+    [JsonPropertyName("ID")]
+    public string id;
     public RemoveStrategyResponse(bool success, string message, string ID) : base(success, message)
     {
-        _id = ID;
+        id = ID;
     }
 }

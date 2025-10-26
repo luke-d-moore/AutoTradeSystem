@@ -4,8 +4,7 @@ using AutoTradeSystem.Dtos;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Text.Json;
 using System.Net;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace AutoTradeSystem.Controllers
 {
@@ -24,9 +23,9 @@ namespace AutoTradeSystem.Controllers
 
         // GET: api/<TradingStrategyController>
         [HttpGet]
-        [SwaggerOperation(nameof(Get))]
+        [SwaggerOperation(nameof(GetAllStrategies))]
         [SwaggerResponse(StatusCodes.Status200OK, "OK")]
-        public IActionResult Get()
+        public IActionResult GetAllStrategies()
         {
             var response = new GetStrategiesResponse(true, "Strategies Retrieved", _autoTradingStrategyService.GetStrategies());
             return Ok(response);
@@ -67,11 +66,11 @@ namespace AutoTradeSystem.Controllers
 
             if (added)
             {
-                return CreatedAtAction("AddStrategy", new AddStrategyResponse(true, "Strategy Added Successfully", tradingStrategy));
+                return Ok(new AddStrategyResponse(true, "Strategy Added Successfully", tradingStrategy));
             }
             else
             {
-                return BadRequest(new AddStrategyResponse(false, "Failed To Add Strategy", tradingStrategy));
+                return BadRequest("Failed To Add Strategy");
             }
         }
 
@@ -103,7 +102,7 @@ namespace AutoTradeSystem.Controllers
             }
             else
             {
-                return BadRequest(new UpdateStrategyResponse(false, "Failed To Update Strategy", id, tradingStrategy));
+                return BadRequest($"Failed To Update Strategy with id {id}");
             }
         }
 
@@ -135,7 +134,7 @@ namespace AutoTradeSystem.Controllers
             }
             else
             {
-                return NotFound(new RemoveStrategyResponse(false, "Strategy Not Found", id));
+                return NotFound($"Strategy Not Found with id {id}");
             }
         }
     }

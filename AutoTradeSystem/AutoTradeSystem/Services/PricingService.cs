@@ -1,9 +1,14 @@
-﻿using System.Collections.Concurrent;
+﻿using AutoTradeSystem.Dtos;
+using System.Collections.Concurrent;
 
 namespace AutoTradeSystem.Services
 {
-    public class PricingService : IPricingService
+    public class PricingService : PricingServiceBase, IPricingService
     {
+        private const int CheckRateMilliseconds = 500;
+        private readonly ILogger<PricingService> _logger;
+        private Random _rand = new Random();
+        //These would be accessed from the database, but here I have hardcoded for testing
         private readonly ConcurrentDictionary<string, decimal> _tickers = new ConcurrentDictionary<string, decimal>(
             new Dictionary<string, decimal>()
         {
@@ -12,7 +17,33 @@ namespace AutoTradeSystem.Services
             { "AMZN", 100.00m },
             { "TEST", 75.00m }
         });
-        //These would be accessed from the database, but here I have hardcoded for testing
+
+        public PricingService(ILogger<PricingService> logger) 
+            : base(CheckRateMilliseconds, logger)
+        {
+            _logger = logger;
+        }
+        public async Task<bool> ChangePrices()
+        {
+            await Task.Delay(1);
+            foreach (var ticker in _tickers.Keys)
+            {
+                if (_tickers.Keys.Contains(ticker))
+                {
+                    var percChange = new decimal(_rand.NextDouble() / 100);
+                    var currentPrice = _tickers[ticker];
+                    if (PriceIncreases(_rand))
+                    {
+                        _tickers[ticker] += currentPrice * percChange;
+                    }
+                    else
+                    {
+                        _tickers[ticker] -= currentPrice * percChange;
+                    }
+                }
+            }
+            return true;
+        }
         private bool PriceIncreases(Random random) 
         {
             return random.NextDouble() > 0.5;
@@ -23,17 +54,6 @@ namespace AutoTradeSystem.Services
             var ticker = Ticker.ToUpper();
             if (_tickers.Keys.Contains(ticker))
             {
-                var rand = new Random();
-                var percChange = new decimal(rand.NextDouble()/100);
-                var currentPrice = _tickers[ticker];
-                if (PriceIncreases(rand))
-                {
-                    _tickers[ticker] += currentPrice * percChange;
-                }
-                else
-                {
-                    _tickers[ticker] -= currentPrice * percChange;
-                }
                 return _tickers[ticker];
             }
             else
@@ -76,6 +96,11 @@ namespace AutoTradeSystem.Services
         public IDictionary<string, decimal> GetTickers()
         {
             return _tickers;
+        }
+
+        protected async override Task<bool> SetCurrentPrices()
+        {
+            return await ChangePrices();
         }
     }
 }
