@@ -41,36 +41,49 @@ namespace AutoTradeSystem.Controllers
             if (tradingStrategy == null) return BadRequest("Invalid Strategy");
             if (tradingStrategy.Ticker == null || (tradingStrategy.Ticker.Length > 5 || tradingStrategy.Ticker.Length < 3))
             {
-                _logger.LogError("Invalid Ticker {0}", tradingStrategy.Ticker);
-                return BadRequest("Invalid Ticker");
+                _logger.LogError($"Invalid Ticker {tradingStrategy.Ticker}");
+                return Problem(
+                    type: "Bad Request",
+                    title: "Invalid Ticker",
+                    detail: $"Invalid Ticker {tradingStrategy.Ticker}",
+                    statusCode: StatusCodes.Status400BadRequest
+                    );
             }
             if (tradingStrategy.Quantity <= 0)
             {
-                _logger.LogError("Invalid Quantity {0}", tradingStrategy.Quantity);
-                return BadRequest("Invalid Quantity. Quantity must be greater than 0.");
+                _logger.LogError($"Invalid Quantity {tradingStrategy.Quantity}");
+                return Problem(
+                    type: "Bad Request",
+                    title: "Invalid Quantity",
+                    detail: $"Invalid Quantity. Quantity must be greater than 0.",
+                    statusCode: StatusCodes.Status400BadRequest
+                    );
             }
             if (tradingStrategy.PriceChange <= 0)
             {
-                _logger.LogError("Invalid PriceChange {0}", tradingStrategy.PriceChange);
-                return BadRequest("Invalid PriceChange. PriceChange must be greater than 0.");
+                _logger.LogError($"Invalid PriceChange {tradingStrategy.PriceChange}");
+                return Problem(
+                    type: "Bad Request",
+                    title: "Invalid PriceChange",
+                    detail: $"Invalid PriceChange. PriceChange must be greater than 0.",
+                    statusCode: StatusCodes.Status400BadRequest
+                    );
             }
             var added = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
             if (added)
             {
                 _logger.LogInformation("Strategy Added Successfully");
-            }
-            else
-            {
-                _logger.LogError("Failed To Add Strategy {@strategyDetails}", tradingStrategy);
-            }
-
-            if (added)
-            {
                 return Ok(new AddStrategyResponse(true, "Strategy Added Successfully", tradingStrategy));
             }
             else
             {
-                return BadRequest("Failed To Add Strategy");
+                _logger.LogError("Failed To Add Strategy {@strategyDetails}", tradingStrategy);
+                return Problem(
+                    type: "Bad Request",
+                    title: "Failed To Add Strategy",
+                    detail: $"Failed To Add Strategy",
+                    statusCode: StatusCodes.Status400BadRequest
+                    );
             }
         }
 
@@ -84,25 +97,28 @@ namespace AutoTradeSystem.Controllers
             if (string.IsNullOrEmpty(id))
             {
                 _logger.LogError("Invalid ID {0}", id);
-                return BadRequest("Invalid ID");
+                return Problem(
+                    type: "Bad Request",
+                    title: "Invalid Strategy ID",
+                    detail: $"Strategy Not Found with id {id}",
+                    statusCode: StatusCodes.Status400BadRequest
+                    );
             }
             var updated = await _autoTradingStrategyService.UpdateStrategy(id, tradingStrategy);
             if (updated)
             {
                 _logger.LogInformation("Strategy Updated Successfully");
-            }
-            else
-            {
-                _logger.LogError("Failed To Update Strategy {0}", id);
-            }
-
-            if (updated)
-            {
                 return Ok(new UpdateStrategyResponse(true, "Strategy Updated Successfully", id, tradingStrategy));
             }
             else
             {
-                return BadRequest($"Failed To Update Strategy with id {id}");
+                _logger.LogError("Failed To Update Strategy {0}", id);
+                return Problem(
+                    type: "Bad Request",
+                    title: "Invalid Strategy ID",
+                    detail: $"Failed To Update Strategy with id {id}",
+                    statusCode: StatusCodes.Status400BadRequest
+                    );
             }
         }
 
@@ -116,25 +132,28 @@ namespace AutoTradeSystem.Controllers
             if (string.IsNullOrEmpty(id))
             {
                 _logger.LogError("Invalid ID {0}", id);
-                return BadRequest("Invalid ID");
+                return Problem(
+                    type: "Bad Request",
+                    title: "Invalid Strategy ID",
+                    detail: $"Strategy Not Found with id {id}",
+                    statusCode: StatusCodes.Status400BadRequest
+                    );
             }
             var removed = await _autoTradingStrategyService.RemoveStrategy(id);
             if (removed)
             {
                 _logger.LogInformation("Strategy Removed Successfully");
-            }
-            else
-            {
-                _logger.LogError("Failed To Remove Strategy {0}", id);
-            }
-
-            if (removed)
-            {
                 return Ok(new RemoveStrategyResponse(true, "Strategy Removed Successfully", id));
             }
             else
             {
-                return NotFound($"Strategy Not Found with id {id}");
+                _logger.LogError("Failed To Remove Strategy {0}", id);
+                return Problem(
+                        type: "Bad Request",
+                        title: "Invalid Strategy ID",
+                        detail: $"Strategy Not Found with id {id}",
+                        statusCode: StatusCodes.Status400BadRequest
+                        );
             }
         }
     }
