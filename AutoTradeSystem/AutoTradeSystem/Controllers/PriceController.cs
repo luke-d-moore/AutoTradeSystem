@@ -26,9 +26,20 @@ namespace AutoTradeSystem.Controllers
         [SwaggerResponse(StatusCodes.Status200OK, "OK")]
         public async Task<IActionResult> Get(string ticker)
         {
-            var price = await _pricingService.GetCurrentPrice(ticker);
-            var response = new GetPriceResponse(true, "Price Retrieved", new Dictionary<string, decimal>() { { ticker, price } });
-            return Ok(response);
+            try
+            {
+                var price = await _pricingService.GetCurrentPrice(ticker);
+                var response = new GetPriceResponse(true, "Price Retrieved", new Dictionary<string, decimal>() { { ticker, price } });
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return Problem(
+                    title: "Price Retrieve Failed",
+                    detail: ex.Message,
+                    statusCode: StatusCodes.Status404NotFound
+                );
+            }
         }
 
         // GET: api/<PriceController>
