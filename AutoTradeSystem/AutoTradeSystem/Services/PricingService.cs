@@ -26,11 +26,12 @@ namespace AutoTradeSystem.Services
         }
         public async Task<bool> GetLatestPrices()
         {
-            foreach (var ticker in _tickers.Keys)
-            {
-                var price = await PriceChecker.GetPriceFromTicker(ticker, _configuration["Token"]);
-                _tickers[ticker] = price;
-            }
+            var tasks = _tickers.Keys.Select(ticker => Task.Run(async () => _tickers[ticker] = await PriceChecker.GetPriceFromTicker(ticker, _configuration["Token"])));
+
+            var waitTask = Task.WhenAll(tasks);
+
+            await waitTask;
+
             return true;
         }
         public async Task<decimal> GetCurrentPrice(string Ticker)
