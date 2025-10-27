@@ -28,9 +28,7 @@ namespace AutoTradeSystem.Services
         {
             var tasks = _tickers.Keys.Select(ticker => Task.Run(async () => _tickers[ticker] = await PriceChecker.GetPriceFromTicker(ticker, _configuration["Token"])));
 
-            var waitTask = Task.WhenAll(tasks);
-
-            await waitTask;
+            await Task.WhenAll(tasks);
 
             return true;
         }
