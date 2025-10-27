@@ -1,52 +1,37 @@
-﻿using AutoTradeSystem.Dtos;
+﻿using AutoTradeSystem.Classes;
+using AutoTradeSystem.Dtos;
 using System.Collections.Concurrent;
 
 namespace AutoTradeSystem.Services
 {
     public class PricingService : PricingServiceBase, IPricingService
     {
-        private const int CheckRateMilliseconds = 500;
+        private const int CheckRateMilliseconds = 60000;
         private readonly ILogger<PricingService> _logger;
-        private Random _rand = new Random();
+        private readonly IConfiguration _configuration;
         //These would be accessed from the database, but here I have hardcoded for testing
-        private readonly ConcurrentDictionary<string, decimal> _tickers = new ConcurrentDictionary<string, decimal>(
+        private readonly Dictionary<string, decimal> _tickers = new Dictionary<string, decimal>(
             new Dictionary<string, decimal>()
         {
-            { "ABC", 50.00m },
-            { "GOOGL", 100.00m },
-            { "AMZN", 100.00m },
-            { "TEST", 75.00m }
+            { "IBM", 0m },
+            { "AMZN", 0m },
+            { "AAPL", 0m }
         });
 
-        public PricingService(ILogger<PricingService> logger) 
+        public PricingService(ILogger<PricingService> logger, IConfiguration configuration) 
             : base(CheckRateMilliseconds, logger)
         {
             _logger = logger;
+            _configuration = configuration;
         }
-        public async Task<bool> ChangePrices()
+        public async Task<bool> GetLatestPrices()
         {
-            await Task.Delay(1);
             foreach (var ticker in _tickers.Keys)
             {
-                if (_tickers.Keys.Contains(ticker))
-                {
-                    var percChange = new decimal(_rand.NextDouble() / 100);
-                    var currentPrice = _tickers[ticker];
-                    if (PriceIncreases(_rand))
-                    {
-                        _tickers[ticker] += currentPrice * percChange;
-                    }
-                    else
-                    {
-                        _tickers[ticker] -= currentPrice * percChange;
-                    }
-                }
+                var price = await PriceChecker.GetPriceFromTicker(ticker, _configuration["Token"]);
+                _tickers[ticker] = price;
             }
             return true;
-        }
-        private bool PriceIncreases(Random random) 
-        {
-            return random.NextDouble() > 0.5;
         }
         public async Task<decimal> GetCurrentPrice(string Ticker)
         {
@@ -100,7 +85,7 @@ namespace AutoTradeSystem.Services
 
         protected async override Task<bool> SetCurrentPrices()
         {
-            return await ChangePrices();
+            return await GetLatestPrices();
         }
     }
 }

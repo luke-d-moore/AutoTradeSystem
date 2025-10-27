@@ -1,7 +1,7 @@
 ﻿using AutoTradeSystem;
 using System.Text.Json.Serialization;
 
-public class RemoveStrategyResponse :Response
+public class RemoveStrategyResponse : BaseResponse
 {
     [JsonPropertyName("ID")]
     public string id;

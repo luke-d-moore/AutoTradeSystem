@@ -2,7 +2,7 @@
 using AutoTradeSystem.Dtos;
 using System.Text.Json.Serialization;
 
-public class UpdateStrategyResponse :Response
+public class UpdateStrategyResponse : BaseResponse
 {
     [JsonPropertyName("ID")]
     public string id;

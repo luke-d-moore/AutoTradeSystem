@@ -2,7 +2,7 @@
 using AutoTradeSystem.Dtos;
 using System.Text.Json.Serialization;
 
-public class GetPriceResponse : Response
+public class GetPriceResponse : BaseResponse
 {
     [JsonPropertyName("Prices")]
     public IDictionary<string, decimal> Prices { get; }

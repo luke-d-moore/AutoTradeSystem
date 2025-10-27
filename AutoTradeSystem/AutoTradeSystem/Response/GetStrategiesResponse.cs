@@ -2,7 +2,7 @@
 using AutoTradeSystem.Dtos;
 using System.Text.Json.Serialization;
 
-public class GetStrategiesResponse : Response
+public class GetStrategiesResponse : BaseResponse
 {
     [JsonPropertyName("TradingStrategies")]
     public IDictionary<string, TradingStrategy> TradingStrategies { get; set; }
