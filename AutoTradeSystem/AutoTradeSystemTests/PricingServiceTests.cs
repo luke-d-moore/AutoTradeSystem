@@ -2,6 +2,7 @@ using AutoTradeSystem;
 using AutoTradeSystem.Dtos;
 using AutoTradeSystem.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using Moq;
 
 namespace AutoTradeSystemTests
@@ -10,11 +11,13 @@ namespace AutoTradeSystemTests
     {
         private readonly IPricingService _pricingService;
         private readonly ILogger<PricingService> _priceLogger;
+        private readonly IConfiguration _configuration;
 
         public PricingServiceTests()
         {
             _priceLogger = new Mock<ILogger<PricingService>>().Object;
-            _pricingService = new PricingService(_priceLogger);
+            _configuration = new Mock<IConfiguration>().Object;
+            _pricingService = new PricingService(_priceLogger, _configuration);
         }
         public static IEnumerable<object[]> TickerData =>
     new List<object[]>
@@ -28,7 +31,7 @@ namespace AutoTradeSystemTests
         public async Task GetCurrentPrice_ValidTicker_ReturnsDecimalAsync()
         {
             //Arrange
-            var result = await _pricingService.GetCurrentPrice("Test");
+            var result = await _pricingService.GetCurrentPrice("IBM");
             //Act and Assert
             Assert.IsType<decimal>(result);
         }
@@ -44,7 +47,7 @@ namespace AutoTradeSystemTests
         public void Buy_Valid_ReturnsDecimal()
         {
             //Arrange
-            var result = _pricingService.Buy("Test", 10, 100, 90);
+            var result = _pricingService.Buy("IBM", 10, 100, 90);
             //Act and Assert
             Assert.Equal(100, result);
         }
@@ -62,13 +65,13 @@ namespace AutoTradeSystemTests
             // Arrange
             var exceptionType = typeof(ArgumentOutOfRangeException);
             // Act and Assert
-            Assert.Throws(exceptionType, () => _pricingService.Buy("Test", 0, 100, 90));
+            Assert.Throws(exceptionType, () => _pricingService.Buy("IBM", 0, 100, 90));
         }
         [Fact]
         public void Sell_Valid_ReturnsDecimal()
         {
             //Arrange
-            var result = _pricingService.Sell("Test", 10, 100, 110);
+            var result = _pricingService.Sell("IBM", 10, 100, 110);
             //Act and Assert
             Assert.Equal(100, result);
         }
@@ -86,7 +89,7 @@ namespace AutoTradeSystemTests
             // Arrange
             var exceptionType = typeof(ArgumentOutOfRangeException);
             // Act and Assert
-            Assert.Throws(exceptionType, () => _pricingService.Sell("Test", 0, 100, 110));
+            Assert.Throws(exceptionType, () => _pricingService.Sell("IBM", 0, 100, 110));
         }
     }
 }

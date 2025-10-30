@@ -1,6 +1,7 @@
 using AutoTradeSystem;
 using AutoTradeSystem.Dtos;
 using AutoTradeSystem.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 namespace AutoTradeSystemTests
@@ -10,18 +11,20 @@ namespace AutoTradeSystemTests
         private readonly IPricingService _pricingService;
         private readonly ILogger<AutoTradingStrategyService> _logger;
         private readonly ILogger<PricingService> _priceLogger;
+        private readonly IConfiguration _configuration;
         private readonly IAutoTradingStrategyService _autoTradingStrategyService;
 
         public AutoTradingStrategyServiceTests()
         {
             _priceLogger = new Mock<ILogger<PricingService>>().Object;
-            _pricingService = new PricingService(_priceLogger);
+            _configuration = new Mock<IConfiguration>().Object;
+            _pricingService = new PricingService(_priceLogger, _configuration);
             _logger = new Mock<ILogger<AutoTradingStrategyService>>().Object;
             _autoTradingStrategyService = new AutoTradingStrategyService(_logger, _pricingService);
         }
         private TradingStrategyDto GetTradingStrategy()
         {
-            return new TradingStrategyDto() { Ticker = "TEST", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy };
+            return new TradingStrategyDto() { Ticker = "IBM", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy };
         }
         [Fact]
         public void GetStrategies_NoStrategies_ReturnsZeroStrategies()
@@ -85,8 +88,8 @@ namespace AutoTradeSystemTests
             {
                 new object[] { null },
                 new object[] { new TradingStrategyDto() { Ticker = "wrong", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy } },
-                new object[] { new TradingStrategyDto() { Ticker = "TEST", PriceChange = 0, Quantity = 10, TradeAction = TradeAction.Buy } },
-                new object[] { new TradingStrategyDto() { Ticker = "TEST", PriceChange = 10, Quantity = 0, TradeAction = TradeAction.Buy } },
+                new object[] { new TradingStrategyDto() { Ticker = "IBM", PriceChange = 0, Quantity = 10, TradeAction = TradeAction.Buy } },
+                new object[] { new TradingStrategyDto() { Ticker = "IBM", PriceChange = 10, Quantity = 0, TradeAction = TradeAction.Buy } },
                 new object[] { new TradingStrategyDto() { Ticker = "ab", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy } },
                 new object[] { new TradingStrategyDto() { Ticker = "", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy } },
                 new object[] { new TradingStrategyDto() { Ticker = "abcdef", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy } },
@@ -133,10 +136,10 @@ namespace AutoTradeSystemTests
         public static IEnumerable<object[]> UpdateStrategyReturnFalseData =>
             new List<object[]>
             {
-                new object[] {new TradingStrategyDto() { Ticker = "TEST", PriceChange = 0, Quantity = 10, TradeAction = TradeAction.Buy } },
-                new object[] {new TradingStrategyDto() { Ticker = "TEST", PriceChange = 10, Quantity = 0, TradeAction = TradeAction.Buy } },
-                new object[] {new TradingStrategyDto() { Ticker = "TEST", PriceChange = 10, Quantity = -5, TradeAction = TradeAction.Buy } },
-                new object[] {new TradingStrategyDto() { Ticker = "TEST", PriceChange = -10, Quantity = 10, TradeAction = TradeAction.Buy } }
+                new object[] {new TradingStrategyDto() { Ticker = "IBM", PriceChange = 0, Quantity = 10, TradeAction = TradeAction.Buy } },
+                new object[] {new TradingStrategyDto() { Ticker = "IBM", PriceChange = 10, Quantity = 0, TradeAction = TradeAction.Buy } },
+                new object[] {new TradingStrategyDto() { Ticker = "IBM", PriceChange = 10, Quantity = -5, TradeAction = TradeAction.Buy } },
+                new object[] {new TradingStrategyDto() { Ticker = "IBM", PriceChange = -10, Quantity = 10, TradeAction = TradeAction.Buy } }
             };
 
         [Theory, MemberData(nameof(UpdateStrategyReturnFalseData))]

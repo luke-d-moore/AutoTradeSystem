@@ -4,6 +4,7 @@ using AutoTradeSystem.Dtos;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Text.Json;
 using System.Net;
+using Microsoft.AspNetCore.Mvc.Routing;
 
 namespace AutoTradeSystem.Controllers
 {
@@ -21,10 +22,10 @@ namespace AutoTradeSystem.Controllers
         }
 
         // GET: api/<PriceController>
-        [HttpGet("{ticker}")]
-        [SwaggerOperation(nameof(Get))]
+        [HttpGet(nameof(GetPrice) + "/{ticker}")]
+        [SwaggerOperation(nameof(GetPrice))]
         [SwaggerResponse(StatusCodes.Status200OK, "OK")]
-        public async Task<IActionResult> Get(string ticker)
+        public async Task<IActionResult> GetPrice(string ticker)
         {
             try
             {
@@ -44,12 +45,25 @@ namespace AutoTradeSystem.Controllers
 
         // GET: api/<PriceController>
         [HttpGet]
-        [SwaggerOperation(nameof(Get))]
+        [Route(nameof(GetAllPrices))]
+        [SwaggerOperation(nameof(GetAllPrices))]
         [SwaggerResponse(StatusCodes.Status200OK, "OK")]
         public IActionResult GetAllPrices()
         {
-            var tickers = _pricingService.GetTickers();
+            var tickers = _pricingService.GetPrices();
             var response = new GetPriceResponse(true, "Prices Retrieved", tickers);
+            return Ok(response);
+        }
+
+        // GET: api/<PriceController>
+        [HttpGet]
+        [Route(nameof(GetTickers))]
+        [SwaggerOperation(nameof(GetTickers))]
+        [SwaggerResponse(StatusCodes.Status200OK, "OK")]
+        public IActionResult GetTickers()
+        {
+            var tickers = _pricingService.GetTickers();
+            var response = new GetTickersResponse(true, "Tickers Retrieved", tickers);
             return Ok(response);
         }
     }

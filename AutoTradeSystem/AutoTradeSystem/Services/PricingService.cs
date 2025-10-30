@@ -10,23 +10,22 @@ namespace AutoTradeSystem.Services
         private readonly ILogger<PricingService> _logger;
         private readonly IConfiguration _configuration;
         //These would be accessed from the database, but here I have hardcoded for testing
-        private readonly Dictionary<string, decimal> _tickers = new Dictionary<string, decimal>(
-            new Dictionary<string, decimal>()
-        {
-            { "IBM", 0m },
-            { "AMZN", 0m },
-            { "AAPL", 0m }
-        });
-
+        private readonly HashSet<string> _tickers = new HashSet<string>() { "IBM", "AMZN", "AAPL" };
+        private readonly Dictionary<string, decimal> _prices = new Dictionary<string, decimal>();
         public PricingService(ILogger<PricingService> logger, IConfiguration configuration) 
             : base(CheckRateMilliseconds, logger)
         {
             _logger = logger;
             _configuration = configuration;
+
+            foreach(var ticker in _tickers)
+            {
+                _prices.TryAdd(ticker, 0m);
+            }
         }
         public async Task<bool> GetLatestPrices()
         {
-            var tasks = _tickers.Keys.Select(ticker => Task.Run(async () => _tickers[ticker] = await PriceChecker.GetPriceFromTicker(ticker, _configuration["Token"])));
+            var tasks = _tickers.Select(ticker => Task.Run(async () => _prices[ticker] = await PriceChecker.GetPriceFromTicker(ticker, _configuration["Token"])));
 
             await Task.WhenAll(tasks);
 
@@ -36,9 +35,9 @@ namespace AutoTradeSystem.Services
         {
             await Task.Delay(1);
             var ticker = Ticker.ToUpper();
-            if (_tickers.Keys.Contains(ticker))
+            if (_prices.Keys.Contains(ticker))
             {
-                return _tickers[ticker];
+                return _prices[ticker];
             }
             else
             {
@@ -48,7 +47,7 @@ namespace AutoTradeSystem.Services
         }
         public decimal Buy(string Ticker, int Quantity, decimal OriginalPrice, decimal CurrentPrice)
         {
-            if (!_tickers.Keys.Contains(Ticker, StringComparer.OrdinalIgnoreCase))
+            if (!_tickers.Contains(Ticker, StringComparer.OrdinalIgnoreCase))
             {
                 throw new ArgumentException("Invalid Ticker", "ticker");
             }
@@ -63,7 +62,7 @@ namespace AutoTradeSystem.Services
         }
         public decimal Sell(string Ticker, int Quantity, decimal OriginalPrice, decimal CurrentPrice)
         {
-            if (!_tickers.Keys.Contains(Ticker, StringComparer.OrdinalIgnoreCase))
+            if (!_tickers.Contains(Ticker, StringComparer.OrdinalIgnoreCase))
             {
                 throw new ArgumentException("Invalid Ticker", "ticker");
             }
@@ -77,9 +76,14 @@ namespace AutoTradeSystem.Services
             return Difference * Quantity;
         }
 
-        public IDictionary<string, decimal> GetTickers()
+        public IList<string> GetTickers()
         {
-            return _tickers;
+            return _tickers.ToList();
+        }
+
+        public IDictionary<string, decimal> GetPrices()
+        {
+            return _prices;
         }
 
         protected async override Task<bool> SetCurrentPrices()
