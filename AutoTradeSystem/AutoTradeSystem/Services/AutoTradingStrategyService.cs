@@ -9,12 +9,14 @@ namespace AutoTradeSystem.Services
         private readonly ILogger<AutoTradingStrategyService> _logger;
         private readonly IDictionary<string, TradingStrategy> _Strategies = new ConcurrentDictionary<string, TradingStrategy>();
         private readonly IPricingService _pricingService;
+        private readonly ITradeActionService _tradeActionService;
 
-        public AutoTradingStrategyService(ILogger<AutoTradingStrategyService> logger, IPricingService pricingService)
+        public AutoTradingStrategyService(ILogger<AutoTradingStrategyService> logger, IPricingService pricingService, ITradeActionService tradeActionService)
             : base(CheckRateMilliseconds, logger)
         {
             _logger = logger;
             _pricingService = pricingService;
+            _tradeActionService = tradeActionService;
         }
         public IDictionary<string, TradingStrategy> GetStrategies()
         {
@@ -191,8 +193,7 @@ namespace AutoTradeSystem.Services
                 {
                     try
                     {
-                        var profit = 0m; //Fix this later by putting the action into a separate controller and microservice
-                        //_pricingService.Sell(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.OriginalPrice, currentPrice.Value);
+                        var profit = _tradeActionService.Sell(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.OriginalPrice);
                         _logger.LogInformation("Successfully Executed Strategy for {@strategy} profit : {0}", strategy, profit);
                         IDsToRemove.Add(strategy.Key);
                         continue;
@@ -215,8 +216,7 @@ namespace AutoTradeSystem.Services
                 {
                     try
                     {
-                        var profit = 0m; //Fix this later by putting the action into a separate controller and microservice
-                        // _pricingService.Buy(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.OriginalPrice, currentPrice.Value);
+                        var profit = _tradeActionService.Buy(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.OriginalPrice);
                         _logger.LogInformation("Successfully Executed Strategy for {@strategy} profit : {0}", strategy, profit);
                         IDsToRemove.Add(strategy.Key);
                         continue;
