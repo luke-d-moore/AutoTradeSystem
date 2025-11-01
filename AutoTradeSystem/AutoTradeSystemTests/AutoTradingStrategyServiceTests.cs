@@ -8,19 +8,18 @@ namespace AutoTradeSystemTests
 {
     public class AutoTradingStrategyServiceTests
     {
-        private readonly IPricingService _pricingService;
+        private readonly Mock<IPricingService> _pricingService;
         private readonly ILogger<AutoTradingStrategyService> _logger;
-        private readonly ILogger<PricingService> _priceLogger;
         private readonly IConfiguration _configuration;
         private readonly IAutoTradingStrategyService _autoTradingStrategyService;
+        private IList<string> _tickers = new List<string>() { "IBM" };
 
-        public AutoTradingStrategyServiceTests()
+    public AutoTradingStrategyServiceTests()
         {
-            _priceLogger = new Mock<ILogger<PricingService>>().Object;
-            _configuration = new Mock<IConfiguration>().Object;
-            _pricingService = new PricingService(_priceLogger, _configuration);
+            _pricingService = new Mock<IPricingService>();
+            _pricingService.Setup(x => x.GetTickers()).Returns(Task.FromResult(_tickers));
             _logger = new Mock<ILogger<AutoTradingStrategyService>>().Object;
-            _autoTradingStrategyService = new AutoTradingStrategyService(_logger, _pricingService);
+            _autoTradingStrategyService = new AutoTradingStrategyService(_logger, _pricingService.Object);
         }
         private TradingStrategyDto GetTradingStrategy()
         {
@@ -39,6 +38,7 @@ namespace AutoTradeSystemTests
         {
             //Arrange
             var tradingStrategy = GetTradingStrategy();
+
             await _autoTradingStrategyService.AddStrategy(tradingStrategy);
             var result = _autoTradingStrategyService.GetStrategies();
             //Act and Assert

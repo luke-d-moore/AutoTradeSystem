@@ -1,94 +1,89 @@
-﻿using AutoTradeSystem.Classes;
-using AutoTradeSystem.Dtos;
-using System.Collections.Concurrent;
+﻿using Serilog;
+using System;
+using System.Text.Json;
 
 namespace AutoTradeSystem.Services
 {
-    public class PricingService : PricingServiceBase, IPricingService
+    public class PricingService : IPricingService
     {
-        private const int CheckRateMilliseconds = 60000;
         private readonly ILogger<PricingService> _logger;
-        private readonly IConfiguration _configuration;
-        //These would be accessed from the database, but here I have hardcoded for testing
-        private readonly HashSet<string> _tickers = new HashSet<string>() { "IBM", "AMZN", "AAPL" };
-        private readonly Dictionary<string, decimal> _prices = new Dictionary<string, decimal>();
+        private IConfiguration _configuration;
+        private string _baseURL;
         public PricingService(ILogger<PricingService> logger, IConfiguration configuration) 
-            : base(CheckRateMilliseconds, logger)
-        {
+        { 
             _logger = logger;
             _configuration = configuration;
-
-            foreach(var ticker in _tickers)
-            {
-                _prices.TryAdd(ticker, 0m);
-            }
+            _baseURL = _configuration["PricingSystemBaseURL"];
         }
-        public async Task<bool> GetLatestPrices()
+        public async Task<decimal> GetPriceFromTicker(string ticker)
         {
-            var tasks = _tickers.Select(ticker => Task.Run(async () => _prices[ticker] = await PriceChecker.GetPriceFromTicker(ticker, _configuration["Token"])));
-
-            await Task.WhenAll(tasks);
-
-            return true;
-        }
-        public async Task<decimal> GetCurrentPrice(string Ticker)
-        {
-            await Task.Delay(1);
-            var ticker = Ticker.ToUpper();
-            if (_prices.Keys.Contains(ticker))
+            try
             {
-                return _prices[ticker];
-            }
-            else
-            {
-                throw new ArgumentException("Invalid Ticker", "ticker");
-            }
+                HttpClient client = new HttpClient();
 
-        }
-        public decimal Buy(string Ticker, int Quantity, decimal OriginalPrice, decimal CurrentPrice)
-        {
-            if (!_tickers.Contains(Ticker, StringComparer.OrdinalIgnoreCase))
-            {
-                throw new ArgumentException("Invalid Ticker", "ticker");
+                using (HttpResponseMessage response = await client.GetAsync(_baseURL + "/GetPrice/" + ticker))
+                {
+                    using (HttpContent content = response.Content)
+                    {
+                        var json = await content.ReadAsStringAsync();
+                        var responseObject = JsonSerializer.Deserialize<GetPriceResponse>(json);
+                        decimal? currentPrice = (responseObject?.Prices.Values.FirstOrDefault());
+                        return currentPrice.HasValue ? currentPrice.Value : 0m;
+                    }
+                }
             }
-            if (Quantity <= 0)
+            catch (Exception ex)
             {
-                throw new ArgumentOutOfRangeException("quantity", Quantity, "Quantity must be greater than 0.");
+                _logger.LogError(ex, "GetPriceFromTicker Failed with the following exception message" + ex.Message);
             }
-
-            var Difference = OriginalPrice - CurrentPrice; // for buy this is positive as original > current
-
-            return Difference * Quantity;
-        }
-        public decimal Sell(string Ticker, int Quantity, decimal OriginalPrice, decimal CurrentPrice)
-        {
-            if (!_tickers.Contains(Ticker, StringComparer.OrdinalIgnoreCase))
-            {
-                throw new ArgumentException("Invalid Ticker", "ticker");
-            }
-            if (Quantity <= 0)
-            {
-                throw new ArgumentOutOfRangeException("quantity", Quantity, "Quantity must be greater than 0.");
-            }
-
-            var Difference = CurrentPrice - OriginalPrice; // for sell this is negative as original < current
-
-            return Difference * Quantity;
+            return 0m;
         }
 
-        public IList<string> GetTickers()
+        public async Task<IDictionary<string, decimal>> GetPrices()
         {
-            return _tickers.ToList();
-        }
+            try
+            {
+                HttpClient client = new HttpClient();
 
-        public IDictionary<string, decimal> GetPrices()
-        {
-            return _prices;
+                using (HttpResponseMessage response = await client.GetAsync(_baseURL + "/GetAllPrices"))
+                {
+                    using (HttpContent content = response.Content)
+                    {
+                        var json = await content.ReadAsStringAsync();
+                        var responseObject = JsonSerializer.Deserialize<GetPriceResponse>(json);
+                        IDictionary<string, decimal> currentPrices = responseObject.Prices;
+                        return currentPrices ?? new Dictionary<string, decimal>();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "GetPrices Failed with the following exception message" + ex.Message);
+            }
+            return new Dictionary<string, decimal>();
         }
-
-        protected async override Task<bool> SetCurrentPrices()
+        public async Task<IList<string>> GetTickers()
         {
-            return await GetLatestPrices();
+            try
+            {
+                HttpClient client = new HttpClient();
+
+                using (HttpResponseMessage response = await client.GetAsync(_baseURL + "/GetTickers"))
+                {
+                    using (HttpContent content = response.Content)
+                    {
+                        var json = await content.ReadAsStringAsync();
+                        var responseObject = JsonSerializer.Deserialize<GetTickersResponse>(json);
+                        IList<string> tickers = responseObject?.Tickers;
+                        return tickers ?? new List<string>();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "GetTickers Failed with the following exception message" + ex.Message);
+            }
+            return new List<string>();
         }
     }
 }
