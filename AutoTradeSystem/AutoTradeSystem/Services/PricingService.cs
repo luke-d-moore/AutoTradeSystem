@@ -21,7 +21,7 @@ namespace AutoTradeSystem.Services
             {
                 HttpClient client = new HttpClient();
 
-                using (HttpResponseMessage response = await client.GetAsync(_baseURL + "/GetPrice/" + ticker))
+                using (HttpResponseMessage response = await client.GetAsync(_baseURL + "/GetPrice/" + ticker).ConfigureAwait(false))
                 {
                     using (HttpContent content = response.Content)
                     {
@@ -45,7 +45,7 @@ namespace AutoTradeSystem.Services
             {
                 HttpClient client = new HttpClient();
 
-                using (HttpResponseMessage response = await client.GetAsync(_baseURL + "/GetAllPrices"))
+                using (HttpResponseMessage response = await client.GetAsync(_baseURL + "/GetAllPrices").ConfigureAwait(false))
                 {
                     using (HttpContent content = response.Content)
                     {
@@ -68,7 +68,7 @@ namespace AutoTradeSystem.Services
             {
                 HttpClient client = new HttpClient();
 
-                using (HttpResponseMessage response = await client.GetAsync(_baseURL + "/GetTickers"))
+                using (HttpResponseMessage response = await client.GetAsync(_baseURL + "/GetTickers").ConfigureAwait(false))
                 {
                     using (HttpContent content = response.Content)
                     {
