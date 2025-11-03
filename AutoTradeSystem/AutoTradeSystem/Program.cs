@@ -1,6 +1,7 @@
 using AutoTradeSystem.Services;
 using Serilog;
 using AutoTradeSystem.Logging;
+using AutoTradeSystem.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 

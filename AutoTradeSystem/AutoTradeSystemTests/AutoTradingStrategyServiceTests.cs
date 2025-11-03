@@ -1,5 +1,6 @@
 using AutoTradeSystem;
 using AutoTradeSystem.Dtos;
+using AutoTradeSystem.Interfaces;
 using AutoTradeSystem.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;

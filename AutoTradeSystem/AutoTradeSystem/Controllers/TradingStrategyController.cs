@@ -1,10 +1,10 @@
-﻿using AutoTradeSystem.Services;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using AutoTradeSystem.Dtos;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Text.Json;
 using System.Net;
 using Microsoft.AspNetCore.Http.HttpResults;
+using AutoTradeSystem.Interfaces;
 
 namespace AutoTradeSystem.Controllers
 {

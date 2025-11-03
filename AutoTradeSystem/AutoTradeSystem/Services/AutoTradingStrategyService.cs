@@ -1,4 +1,5 @@
 ﻿using AutoTradeSystem.Dtos;
+using AutoTradeSystem.Interfaces;
 using System.Collections.Concurrent;
 
 namespace AutoTradeSystem.Services

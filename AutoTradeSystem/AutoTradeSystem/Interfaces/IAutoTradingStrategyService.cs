@@ -1,8 +1,8 @@
 ﻿using AutoTradeSystem.Dtos;
 
-namespace AutoTradeSystem.Services
+namespace AutoTradeSystem.Interfaces
 {
-    public interface IAutoTradingStrategyService :IHostedService
+    public interface IAutoTradingStrategyService : IHostedService
     {
         IDictionary<string, TradingStrategy> GetStrategies();
         Task<bool> AddStrategy(TradingStrategyDto strategyDetails);

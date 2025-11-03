@@ -1,4 +1,4 @@
-﻿namespace AutoTradeSystem.Services
+﻿namespace AutoTradeSystem.Interfaces
 {
     public interface IPricingService
     {

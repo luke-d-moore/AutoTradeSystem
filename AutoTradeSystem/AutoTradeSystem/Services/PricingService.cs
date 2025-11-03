@@ -1,4 +1,5 @@
-﻿using Serilog;
+﻿using AutoTradeSystem.Interfaces;
+using Serilog;
 using System;
 using System.Text.Json;
 
