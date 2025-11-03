@@ -5,13 +5,13 @@ namespace AutoTradeSystem.Services
 {
     public class AutoTradingStrategyService : AutoTradingStrategyServiceBase, IAutoTradingStrategyService
     {
-        private const int CheckRateMilliseconds = 5000;
+        private const int _checkRate = 5000;
         private readonly ILogger<AutoTradingStrategyService> _logger;
         private readonly IDictionary<string, TradingStrategy> _Strategies = new ConcurrentDictionary<string, TradingStrategy>();
         private readonly IPricingService _pricingService;
 
         public AutoTradingStrategyService(ILogger<AutoTradingStrategyService> logger, IPricingService pricingService)
-            : base(CheckRateMilliseconds, logger)
+            : base(_checkRate, logger)
         {
             _logger = logger;
             _pricingService = pricingService;
