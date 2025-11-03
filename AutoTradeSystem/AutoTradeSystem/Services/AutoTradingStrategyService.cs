@@ -9,14 +9,12 @@ namespace AutoTradeSystem.Services
         private readonly ILogger<AutoTradingStrategyService> _logger;
         private readonly IDictionary<string, TradingStrategy> _Strategies = new ConcurrentDictionary<string, TradingStrategy>();
         private readonly IPricingService _pricingService;
-        private readonly ITradeActionService _tradeActionService;
 
-        public AutoTradingStrategyService(ILogger<AutoTradingStrategyService> logger, IPricingService pricingService, ITradeActionService tradeActionService)
+        public AutoTradingStrategyService(ILogger<AutoTradingStrategyService> logger, IPricingService pricingService)
             : base(CheckRateMilliseconds, logger)
         {
             _logger = logger;
             _pricingService = pricingService;
-            _tradeActionService = tradeActionService;
         }
         public IDictionary<string, TradingStrategy> GetStrategies()
         {
@@ -45,7 +43,7 @@ namespace AutoTradeSystem.Services
                 return false;
             }
 
-            var allowedTickers = (await _pricingService.GetTickers()).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var allowedTickers = (await _pricingService.GetTickers().ConfigureAwait(false)).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             if (allowedTickers.Contains(tradingStrategy.Ticker))
             {
@@ -91,7 +89,7 @@ namespace AutoTradeSystem.Services
 
             decimal multiplyfactor = (100 + movement) / 100.0m;
 
-            decimal? quote = OriginalPrice == 0 ? await _pricingService.GetPriceFromTicker(tradingStrategy.Ticker) : OriginalPrice;
+            decimal? quote = OriginalPrice == 0 ? await _pricingService.GetPriceFromTicker(tradingStrategy.Ticker).ConfigureAwait(false) : OriginalPrice;
 
             if(quote == null) return (null, null);
 
@@ -179,7 +177,7 @@ namespace AutoTradeSystem.Services
         {
             var IDsToRemove = new List<string>();
 
-            var currentPrices = await _pricingService.GetPrices();
+            var currentPrices = await _pricingService.GetPrices().ConfigureAwait(false);
 
             if (!currentPrices.Any()) return 0;
 
@@ -193,8 +191,9 @@ namespace AutoTradeSystem.Services
                 {
                     try
                     {
-                        var profit = _tradeActionService.Sell(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.OriginalPrice);
-                        _logger.LogInformation("Successfully Executed Strategy for {@strategy} profit : {0}", strategy, profit);
+                        //Publish a message to the queue, with the ticker value, Quantity To be Sold and also the Trade Action
+                        //var profit = _tradeActionService.Sell(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.OriginalPrice);
+                        _logger.LogInformation("Successfully Executed Strategy for {@strategy} profit : {0}", strategy);
                         IDsToRemove.Add(strategy.Key);
                         continue;
                     }
@@ -216,8 +215,9 @@ namespace AutoTradeSystem.Services
                 {
                     try
                     {
-                        var profit = _tradeActionService.Buy(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.OriginalPrice);
-                        _logger.LogInformation("Successfully Executed Strategy for {@strategy} profit : {0}", strategy, profit);
+                        //Publish a message to the queue, with the ticker value, Quantity To be Sold and also the Trade Action
+                        //var profit = _tradeActionService.Buy(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.OriginalPrice);
+                        _logger.LogInformation("Successfully Executed Strategy for {@strategy} profit : {0}", strategy);
                         IDsToRemove.Add(strategy.Key);
                         continue;
                     }

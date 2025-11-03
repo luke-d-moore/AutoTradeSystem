@@ -9,7 +9,6 @@ namespace AutoTradeSystemTests
     public class AutoTradingStrategyServiceTests
     {
         private readonly Mock<IPricingService> _pricingService;
-        private readonly Mock<ITradeActionService> _tradeActionService;
         private readonly ILogger<AutoTradingStrategyService> _logger;
         private readonly IConfiguration _configuration;
         private readonly IAutoTradingStrategyService _autoTradingStrategyService;
@@ -18,10 +17,9 @@ namespace AutoTradeSystemTests
     public AutoTradingStrategyServiceTests()
         {
             _pricingService = new Mock<IPricingService>();
-            _tradeActionService = new Mock<ITradeActionService>();
             _pricingService.Setup(x => x.GetTickers()).Returns(Task.FromResult(_tickers));
             _logger = new Mock<ILogger<AutoTradingStrategyService>>().Object;
-            _autoTradingStrategyService = new AutoTradingStrategyService(_logger, _pricingService.Object, _tradeActionService.Object);
+            _autoTradingStrategyService = new AutoTradingStrategyService(_logger, _pricingService.Object);
         }
         private TradingStrategyDto GetTradingStrategy()
         {
