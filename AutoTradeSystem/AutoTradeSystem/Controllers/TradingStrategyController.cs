@@ -115,7 +115,7 @@ namespace AutoTradeSystem.Controllers
                 _logger.LogError("Failed To Update Strategy {0}", id);
                 return Problem(
                     type: "Bad Request",
-                    title: "Invalid Strategy ID",
+                    title: "Failed To Update Strategy",
                     detail: $"Failed To Update Strategy with id {id}",
                     statusCode: StatusCodes.Status400BadRequest
                     );
@@ -150,7 +150,7 @@ namespace AutoTradeSystem.Controllers
                 _logger.LogError("Failed To Remove Strategy {0}", id);
                 return Problem(
                         type: "Bad Request",
-                        title: "Invalid Strategy ID",
+                        title: "Failed To Remove Strategy",
                         detail: $"Strategy Not Found with id {id}",
                         statusCode: StatusCodes.Status400BadRequest
                         );

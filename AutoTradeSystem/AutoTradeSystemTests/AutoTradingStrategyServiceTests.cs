@@ -140,7 +140,8 @@ namespace AutoTradeSystemTests
                 new object[] {new TradingStrategyDto() { Ticker = "IBM", PriceChange = 0, Quantity = 10, TradeAction = TradeAction.Buy } },
                 new object[] {new TradingStrategyDto() { Ticker = "IBM", PriceChange = 10, Quantity = 0, TradeAction = TradeAction.Buy } },
                 new object[] {new TradingStrategyDto() { Ticker = "IBM", PriceChange = 10, Quantity = -5, TradeAction = TradeAction.Buy } },
-                new object[] {new TradingStrategyDto() { Ticker = "IBM", PriceChange = -10, Quantity = 10, TradeAction = TradeAction.Buy } }
+                new object[] {new TradingStrategyDto() { Ticker = "IBM", PriceChange = -10, Quantity = 10, TradeAction = TradeAction.Buy } },
+                new object[] {new TradingStrategyDto() { Ticker = "abc", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy } }
             };
 
         [Theory, MemberData(nameof(UpdateStrategyReturnFalseData))]

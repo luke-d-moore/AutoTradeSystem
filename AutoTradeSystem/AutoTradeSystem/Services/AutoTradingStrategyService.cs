@@ -22,61 +22,79 @@ namespace AutoTradeSystem.Services
             return _Strategies;
         }
 
-        public async Task<bool> AddStrategy(TradingStrategyDto tradingStrategy)
+        private async Task<bool> ValidateStrategy(TradingStrategyDto TradingStrategy, string CalledFrom)
         {
-            if (tradingStrategy == null) return false;
-            if (tradingStrategy.Ticker == null || (tradingStrategy.Ticker.Length > 5 || tradingStrategy.Ticker.Length < 3))
+            if (TradingStrategy == null)
             {
+                _logger.LogError($"Failed to {CalledFrom}, tradingStrategy was null");
                 return false;
             }
-            if (tradingStrategy.Quantity <= 0)
+            if (TradingStrategy.Ticker == null || (TradingStrategy.Ticker.Length > 5 || TradingStrategy.Ticker.Length < 3))
             {
+                _logger.LogError($"Failed to {CalledFrom}, Ticker was invalid.");
                 return false;
             }
-            if (tradingStrategy.PriceChange <= 0)
+            if (TradingStrategy.PriceChange <= 0)
             {
+                _logger.LogError($"Failed to {CalledFrom}, Price change must be greater than 0");
                 return false;
             }
-            var actionPrice = await GetActionPrice(tradingStrategy);
-
-            if (actionPrice.ActionPrice == null || actionPrice.OriginalPrice == null)
+            if (TradingStrategy.Quantity <= 0)
             {
+                _logger.LogError($"Failed to {CalledFrom}, Quantity must be greater than 0");
                 return false;
             }
 
             var allowedTickers = (await _pricingService.GetTickers().ConfigureAwait(false)).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-            if (allowedTickers.Contains(tradingStrategy.Ticker))
+            if (allowedTickers.Contains(TradingStrategy.Ticker))
             {
-                tradingStrategy.Ticker = allowedTickers.First(x => x.Equals(tradingStrategy.Ticker, StringComparison.OrdinalIgnoreCase));
+                TradingStrategy.Ticker = allowedTickers.First(x => x.Equals(TradingStrategy.Ticker, StringComparison.OrdinalIgnoreCase));
             }
             else
             {
+                _logger.LogError($"Failed to {CalledFrom}, Ticker was invalid. Ticker was : {TradingStrategy.Ticker}");
                 return false;
             }
+
+            return true;
+        }
+
+        private bool ValidateActionPrice(decimal? ActionPrice, decimal? OriginalPrice, string CalledFrom)
+        {
+            if (!ActionPrice.HasValue || !OriginalPrice.HasValue)
+            {
+                _logger.LogError($"Failed to {CalledFrom}, Failed to get ActionPrice ");
+                return false;
+            }
+            return true;
+        }
+
+        public async Task<bool> AddStrategy(TradingStrategyDto tradingStrategy)
+        {
+            if(!await ValidateStrategy(tradingStrategy, "Add Strategy")) return false;
+
+            var actionPrice = await GetActionPrice(tradingStrategy);
+
+            if(!ValidateActionPrice(actionPrice.ActionPrice, actionPrice.OriginalPrice, "Add Strategy")) return false;
 
             var id = Guid.NewGuid().ToString();
 
             var strategy = new TradingStrategy(actionPrice.ActionPrice.Value, tradingStrategy, actionPrice.OriginalPrice.Value);
 
-            var added = _Strategies.TryAdd(
-                id,
-                strategy
-                );
-
-            if (added)
+            if (_Strategies.TryAdd(id, strategy))
             {
                 _logger.LogInformation("Strategy Added Successfully {0}", id);
+                return true;
             }
             else
             {
                 _logger.LogError("Failed to Add Strategy {@strategy}", strategy);
+                return false;
             }
-
-            return added;
         }
 
-        private async Task<(decimal? ActionPrice, decimal? OriginalPrice)> GetActionPrice(TradingStrategyDto tradingStrategy, decimal OriginalPrice = 0)
+        private async Task<(decimal? ActionPrice, decimal? OriginalPrice)> GetActionPrice(TradingStrategyDto tradingStrategy, decimal OriginalPrice = 0m)
         {
             //we need to keep a record of the price that we will action the strategy
             //PriceMovement is a percentage
@@ -90,7 +108,7 @@ namespace AutoTradeSystem.Services
 
             decimal multiplyfactor = (100 + movement) / 100.0m;
 
-            decimal? quote = OriginalPrice == 0 ? await _pricingService.GetPriceFromTicker(tradingStrategy.Ticker).ConfigureAwait(false) : OriginalPrice;
+            decimal? quote = OriginalPrice == 0m ? await _pricingService.GetPriceFromTicker(tradingStrategy.Ticker).ConfigureAwait(false) : OriginalPrice;
 
             if(quote == null) return (null, null);
 
@@ -99,20 +117,19 @@ namespace AutoTradeSystem.Services
 
         public async Task<bool> RemoveStrategy(string ID)
         {
-            await Task.Delay(1);
+            await Task.Delay(0);
             if(ID == null) return false;
-            var removed =_Strategies.Remove(ID);
 
-            if (removed)
+            if (_Strategies.Remove(ID))
             {
                 _logger.LogInformation("Strategy Removed Successfully {0}", ID);
+                return true;
             }
             else
             {
                 _logger.LogError("Failed to Remove Strategy {0}", ID);
+                return false;
             }
-
-            return removed; 
         }
         public async Task<bool> UpdateStrategy(string ID, TradingStrategyDto tradingStrategy)
         {
@@ -121,36 +138,20 @@ namespace AutoTradeSystem.Services
                 _logger.LogError("Failed to Update Strategy, ID was null");
                 return false;
             }
-            if (tradingStrategy == null)
-            {
-                _logger.LogError("Failed to Update Strategy, tradingStrategy was null");
-                return false;
-            }
-            if (tradingStrategy.PriceChange <= 0)
-            {
-                _logger.LogError("Failed to Update Strategy, Price change must be greater than 0");
-                return false;
-            }
-            if (tradingStrategy.Quantity <= 0)
-            {
-                _logger.LogError("Failed to Update Strategy, Quantity must be greater than 0");
-                return false;
-            }
-            var currentStrategy = new TradingStrategy();
-            if (!_Strategies.TryGetValue(ID, out currentStrategy))
+
+            if (!_Strategies.TryGetValue(ID, out var currentStrategy))
             {
                 _logger.LogError("Failed to Update Strategy, ID was not found : {0}", ID);
                 return false;
             }
 
-            var newActionPrice = await (GetActionPrice(tradingStrategy, currentStrategy.OriginalPrice));
-            if (!newActionPrice.ActionPrice.HasValue)
-            {
-                _logger.LogError("Failed to Update Strategy, update ActionPrice Failed {@strategy}", tradingStrategy);
-                return false;
-            }
+            if (!await ValidateStrategy(tradingStrategy, "Update Strategy")) return false;
+
+            var newActionPrice = await GetActionPrice(tradingStrategy, currentStrategy.OriginalPrice);
+            if (!ValidateActionPrice(newActionPrice.ActionPrice, newActionPrice.OriginalPrice, "Update Strategy")) return false;
 
             currentStrategy.TradingStrategyDto.TradeAction = tradingStrategy.TradeAction;
+            currentStrategy.TradingStrategyDto.Ticker = tradingStrategy.Ticker;
             currentStrategy.TradingStrategyDto.Quantity = tradingStrategy.Quantity;
             currentStrategy.TradingStrategyDto.PriceChange = tradingStrategy.PriceChange;
             currentStrategy.ActionPrice = newActionPrice.ActionPrice.Value;
@@ -184,9 +185,7 @@ namespace AutoTradeSystem.Services
 
             foreach (var strategy in _Strategies)
             {
-                decimal currentPrice = 0m;
-
-                if (!currentPrices.TryGetValue(strategy.Value.TradingStrategyDto.Ticker, out currentPrice)) continue;
+                if (!currentPrices.TryGetValue(strategy.Value.TradingStrategyDto.Ticker, out var currentPrice)) continue;
 
                 if (currentPrice >= strategy.Value.ActionPrice && strategy.Value.TradingStrategyDto.TradeAction == TradeAction.Sell)
                 {
