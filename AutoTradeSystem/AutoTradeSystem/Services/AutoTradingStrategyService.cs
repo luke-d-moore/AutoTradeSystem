@@ -10,18 +10,18 @@ namespace AutoTradeSystem.Services
 {
     public class AutoTradingStrategyService : AutoTradingStrategyServiceBase, IAutoTradingStrategyService
     {
-        private const int _checkRate = 5000;
+        private const int _checkRate = 30000;
         private readonly ILogger<AutoTradingStrategyService> _logger;
         private readonly IDictionary<string, TradingStrategy> _Strategies = new ConcurrentDictionary<string, TradingStrategy>();
         private readonly IPricingService _pricingService;
-        private readonly string _exchangeName;
+        private readonly ITradeActionService _tradeActionService;
 
-        public AutoTradingStrategyService(ILogger<AutoTradingStrategyService> logger, IPricingService pricingService, IConfiguration configuration)
+        public AutoTradingStrategyService(ILogger<AutoTradingStrategyService> logger, IPricingService pricingService, ITradeActionService tradeActionService)
             : base(_checkRate, logger)
         {
             _logger = logger;
             _pricingService = pricingService;
-            _exchangeName = configuration["RabbitMQExchange"];
+            _tradeActionService = tradeActionService;
         }
         public IDictionary<string, TradingStrategy> GetStrategies()
         {
@@ -191,13 +191,14 @@ namespace AutoTradeSystem.Services
 
             foreach (var strategy in _Strategies)
             {
+                await _tradeActionService.PublishMessage(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, "Sell");
                 if (!currentPrices.TryGetValue(strategy.Value.TradingStrategyDto.Ticker, out var currentPrice)) continue;
 
                 if (currentPrice >= strategy.Value.ActionPrice && strategy.Value.TradingStrategyDto.TradeAction == TradeAction.Sell)
                 {
                     try
                     {
-                        await PublishMessage(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, "Sell");
+                        await _tradeActionService.PublishMessage(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, "Sell");
                         _logger.LogInformation("Successfully Executed Strategy for {@strategy} profit : {0}", strategy);
                         IDsToRemove.Add(strategy.Key);
                         continue;
@@ -220,7 +221,7 @@ namespace AutoTradeSystem.Services
                 {
                     try
                     {
-                        await PublishMessage(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, "Buy");
+                        await _tradeActionService.PublishMessage(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, "Buy");
                         _logger.LogInformation("Successfully Executed Strategy for {@strategy} profit : {0}", strategy);
                         IDsToRemove.Add(strategy.Key);
                         continue;
@@ -243,21 +244,6 @@ namespace AutoTradeSystem.Services
             RemoveStrategies(IDsToRemove);
 
             return 0;
-        }
-
-        private async Task PublishMessage(string ticker, int quantity, string action)
-        {
-            var factory = new ConnectionFactory { HostName = "localhost" };
-            using var connection = await factory.CreateConnectionAsync();
-            using (var channel = await connection.CreateChannelAsync())
-            {
-                var message = new Message(ticker, quantity, action);
-                var jsonMessage = JsonSerializer.Serialize(message);
-                _logger.LogInformation($"message : {jsonMessage}");
-                var body = Encoding.UTF8.GetBytes(jsonMessage);
-
-                await channel.BasicPublishAsync(exchange: _exchangeName, routingKey:string.Empty, body: body);
-            }
         }
     }
 }

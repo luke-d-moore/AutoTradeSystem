@@ -32,6 +32,7 @@ builder.Services.AddLogging(configure => { configure.AddSerilog(); });
 builder.Services.AddSingleton<IAutoTradingStrategyService, AutoTradingStrategyService>();
 builder.Services.AddHostedService(p => p.GetRequiredService<IAutoTradingStrategyService>());
 builder.Services.AddSingleton<IPricingService, PricingService>();
+builder.Services.AddSingleton<ITradeActionService, TradeActionService>();
 
 var app = builder.Build();
 
