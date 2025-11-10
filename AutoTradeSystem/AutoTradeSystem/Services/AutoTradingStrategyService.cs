@@ -10,7 +10,7 @@ namespace AutoTradeSystem.Services
 {
     public class AutoTradingStrategyService : AutoTradingStrategyServiceBase, IAutoTradingStrategyService
     {
-        private const int _checkRate = 30000;
+        private const int _checkRate = 5000;
         private readonly ILogger<AutoTradingStrategyService> _logger;
         private readonly IDictionary<string, TradingStrategy> _Strategies = new ConcurrentDictionary<string, TradingStrategy>();
         private readonly IPricingService _pricingService;
