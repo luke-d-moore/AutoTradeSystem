@@ -191,14 +191,13 @@ namespace AutoTradeSystem.Services
 
             foreach (var strategy in _Strategies)
             {
-                await _tradeActionService.PublishMessage(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, "Sell");
                 if (!currentPrices.TryGetValue(strategy.Value.TradingStrategyDto.Ticker, out var currentPrice)) continue;
 
                 if (currentPrice >= strategy.Value.ActionPrice && strategy.Value.TradingStrategyDto.TradeAction == TradeAction.Sell)
                 {
                     try
                     {
-                        await _tradeActionService.PublishMessage(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, "Sell");
+                        await _tradeActionService.PublishMessage(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.TradingStrategyDto.TradeAction.ToString());
                         _logger.LogInformation("Successfully Executed Strategy for {@strategy} profit : {0}", strategy);
                         IDsToRemove.Add(strategy.Key);
                         continue;
@@ -221,7 +220,7 @@ namespace AutoTradeSystem.Services
                 {
                     try
                     {
-                        await _tradeActionService.PublishMessage(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, "Buy");
+                        await _tradeActionService.PublishMessage(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.TradingStrategyDto.TradeAction.ToString());
                         _logger.LogInformation("Successfully Executed Strategy for {@strategy} profit : {0}", strategy);
                         IDsToRemove.Add(strategy.Key);
                         continue;
