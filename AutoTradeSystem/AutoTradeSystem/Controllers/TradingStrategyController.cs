@@ -69,7 +69,7 @@ namespace AutoTradeSystem.Controllers
                     statusCode: StatusCodes.Status400BadRequest
                     );
             }
-            var added = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
+            var added = await _autoTradingStrategyService.AddStrategy(tradingStrategy).ConfigureAwait(false);
             if (added)
             {
                 _logger.LogInformation("Strategy Added Successfully");
@@ -104,7 +104,7 @@ namespace AutoTradeSystem.Controllers
                     statusCode: StatusCodes.Status400BadRequest
                     );
             }
-            var updated = await _autoTradingStrategyService.UpdateStrategy(id, tradingStrategy);
+            var updated = await _autoTradingStrategyService.UpdateStrategy(id, tradingStrategy).ConfigureAwait(false);
             if (updated)
             {
                 _logger.LogInformation("Strategy Updated Successfully");
@@ -139,7 +139,7 @@ namespace AutoTradeSystem.Controllers
                     statusCode: StatusCodes.Status400BadRequest
                     );
             }
-            var removed = await _autoTradingStrategyService.RemoveStrategy(id);
+            var removed = await _autoTradingStrategyService.RemoveStrategy(id).ConfigureAwait(false);
             if (removed)
             {
                 _logger.LogInformation("Strategy Removed Successfully");

@@ -72,9 +72,9 @@ namespace AutoTradeSystem.Services
 
         public async Task<bool> AddStrategy(TradingStrategyDto tradingStrategy)
         {
-            if(!await ValidateStrategy(tradingStrategy, "Add Strategy")) return false;
+            if(!await ValidateStrategy(tradingStrategy, "Add Strategy").ConfigureAwait(false)) return false;
 
-            var actionPrice = await GetActionPrice(tradingStrategy);
+            var actionPrice = await GetActionPrice(tradingStrategy).ConfigureAwait(false);
 
             if(!ValidateActionPrice(actionPrice.ActionPrice, actionPrice.OriginalPrice, "Add Strategy")) return false;
 
@@ -145,9 +145,9 @@ namespace AutoTradeSystem.Services
                 return false;
             }
 
-            if (!await ValidateStrategy(tradingStrategy, "Update Strategy")) return false;
+            if (!await ValidateStrategy(tradingStrategy, "Update Strategy").ConfigureAwait(false)) return false;
 
-            var newActionPrice = await GetActionPrice(tradingStrategy, currentStrategy.OriginalPrice);
+            var newActionPrice = await GetActionPrice(tradingStrategy, currentStrategy.OriginalPrice).ConfigureAwait(false);
             if (!ValidateActionPrice(newActionPrice.ActionPrice, newActionPrice.OriginalPrice, "Update Strategy")) return false;
 
             currentStrategy.TradingStrategyDto.TradeAction = tradingStrategy.TradeAction;

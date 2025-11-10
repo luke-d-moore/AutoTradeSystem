@@ -26,7 +26,7 @@ namespace AutoTradeSystem.Services
                 {
                     using (HttpContent content = response.Content)
                     {
-                        var json = await content.ReadAsStringAsync();
+                        var json = await content.ReadAsStringAsync().ConfigureAwait(false);
                         var responseObject = JsonSerializer.Deserialize<GetPriceResponse>(json);
                         decimal? currentPrice = (responseObject?.Prices.Values.FirstOrDefault());
                         return currentPrice.HasValue ? currentPrice.Value : 0m;
@@ -50,7 +50,7 @@ namespace AutoTradeSystem.Services
                 {
                     using (HttpContent content = response.Content)
                     {
-                        var json = await content.ReadAsStringAsync();
+                        var json = await content.ReadAsStringAsync().ConfigureAwait(false);
                         var responseObject = JsonSerializer.Deserialize<GetPriceResponse>(json);
                         IDictionary<string, decimal> currentPrices = responseObject.Prices;
                         return currentPrices ?? new Dictionary<string, decimal>();
@@ -73,7 +73,7 @@ namespace AutoTradeSystem.Services
                 {
                     using (HttpContent content = response.Content)
                     {
-                        var json = await content.ReadAsStringAsync();
+                        var json = await content.ReadAsStringAsync().ConfigureAwait(false);
                         var responseObject = JsonSerializer.Deserialize<GetTickersResponse>(json);
                         IList<string> tickers = responseObject?.Tickers;
                         return tickers ?? new List<string>();
