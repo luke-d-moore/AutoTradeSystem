@@ -1,6 +1,10 @@
 ﻿using AutoTradeSystem.Dtos;
 using AutoTradeSystem.Interfaces;
 using System.Collections.Concurrent;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
+using System.Text;
+using System.Text.Json;
 
 namespace AutoTradeSystem.Services
 {
@@ -10,12 +14,14 @@ namespace AutoTradeSystem.Services
         private readonly ILogger<AutoTradingStrategyService> _logger;
         private readonly IDictionary<string, TradingStrategy> _Strategies = new ConcurrentDictionary<string, TradingStrategy>();
         private readonly IPricingService _pricingService;
+        private readonly string _exchangeName;
 
-        public AutoTradingStrategyService(ILogger<AutoTradingStrategyService> logger, IPricingService pricingService)
+        public AutoTradingStrategyService(ILogger<AutoTradingStrategyService> logger, IPricingService pricingService, IConfiguration configuration)
             : base(_checkRate, logger)
         {
             _logger = logger;
             _pricingService = pricingService;
+            _exchangeName = configuration["RabbitMQExchange"];
         }
         public IDictionary<string, TradingStrategy> GetStrategies()
         {
@@ -191,8 +197,7 @@ namespace AutoTradeSystem.Services
                 {
                     try
                     {
-                        //Publish a message to the queue, with the ticker value, Quantity To be Sold and also the Trade Action
-                        //var profit = _tradeActionService.Sell(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.OriginalPrice);
+                        await PublishMessage(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, "Sell");
                         _logger.LogInformation("Successfully Executed Strategy for {@strategy} profit : {0}", strategy);
                         IDsToRemove.Add(strategy.Key);
                         continue;
@@ -215,8 +220,7 @@ namespace AutoTradeSystem.Services
                 {
                     try
                     {
-                        //Publish a message to the queue, with the ticker value, Quantity To be Sold and also the Trade Action
-                        //var profit = _tradeActionService.Buy(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.OriginalPrice);
+                        await PublishMessage(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, "Buy");
                         _logger.LogInformation("Successfully Executed Strategy for {@strategy} profit : {0}", strategy);
                         IDsToRemove.Add(strategy.Key);
                         continue;
@@ -239,6 +243,21 @@ namespace AutoTradeSystem.Services
             RemoveStrategies(IDsToRemove);
 
             return 0;
+        }
+
+        private async Task PublishMessage(string ticker, int quantity, string action)
+        {
+            var factory = new ConnectionFactory { HostName = "localhost" };
+            using var connection = await factory.CreateConnectionAsync();
+            using (var channel = await connection.CreateChannelAsync())
+            {
+                var message = new Message(ticker, quantity, action);
+                var jsonMessage = JsonSerializer.Serialize(message);
+                _logger.LogInformation($"message : {jsonMessage}");
+                var body = Encoding.UTF8.GetBytes(jsonMessage);
+
+                await channel.BasicPublishAsync(exchange: _exchangeName, routingKey:string.Empty, body: body);
+            }
         }
     }
 }
