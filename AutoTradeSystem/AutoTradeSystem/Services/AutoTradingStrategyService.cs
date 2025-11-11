@@ -198,17 +198,9 @@ namespace AutoTradeSystem.Services
                     try
                     {
                         await _tradeActionService.PublishMessage(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.TradingStrategyDto.TradeAction.ToString());
-                        _logger.LogInformation("Successfully Executed Strategy for {@strategy} profit : {0}", strategy);
+                        _logger.LogInformation("Successfully Executed Strategy for {@strategy}", strategy);
                         IDsToRemove.Add(strategy.Key);
                         continue;
-                    }
-                    catch (ArgumentOutOfRangeException ex)
-                    {
-                        _logger.LogInformation(ex, "Failed to Execute Strategy for {@strategy}, Quantity was invalid", strategy);
-                    }
-                    catch (ArgumentException ex)
-                    {
-                        _logger.LogInformation(ex, "Failed to Execute Strategy for {@strategy}, Ticker was invalid", strategy);
                     }
                     catch (Exception ex)
                     {
@@ -221,17 +213,9 @@ namespace AutoTradeSystem.Services
                     try
                     {
                         await _tradeActionService.PublishMessage(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.TradingStrategyDto.TradeAction.ToString());
-                        _logger.LogInformation("Successfully Executed Strategy for {@strategy} profit : {0}", strategy);
+                        _logger.LogInformation("Successfully Executed Strategy for {@strategy}", strategy);
                         IDsToRemove.Add(strategy.Key);
                         continue;
-                    }
-                    catch (ArgumentOutOfRangeException ex)
-                    {
-                        _logger.LogInformation(ex, "Failed to Execute Strategy for {@strategy}, Quantity was invalid", strategy);
-                    }
-                    catch (ArgumentException ex)
-                    {
-                        _logger.LogInformation(ex, "Failed to Execute Strategy for {@strategy}, Ticker was invalid", strategy);
                     }
                     catch (Exception ex)
                     {
