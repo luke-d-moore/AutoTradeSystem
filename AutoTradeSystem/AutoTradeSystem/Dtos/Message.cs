@@ -6,6 +6,8 @@ namespace AutoTradeSystem.Dtos
     {
         [JsonPropertyName("Ticker")]
         public string Ticker { get; set; }
+        [JsonPropertyName("UniqueID")]
+        public string UniqueID { get; set; }
         [JsonPropertyName("Quantity")]
         public int Quantity { get; set; }
         [JsonPropertyName("Action")]
@@ -15,6 +17,7 @@ namespace AutoTradeSystem.Dtos
             Ticker = ticker;
             Quantity = quantity;
             Action = action;
+            UniqueID = Guid.NewGuid().ToString();
         }
     }
 }
