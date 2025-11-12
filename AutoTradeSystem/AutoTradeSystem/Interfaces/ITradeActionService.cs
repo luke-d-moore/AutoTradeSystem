@@ -4,6 +4,6 @@ namespace AutoTradeSystem.Interfaces
 {
     public interface ITradeActionService
     {
-        Task PublishMessage(string ticker, int quantity, string action);
+        Task PublishMessage(string ticker, int quantity, string action, CancellationToken cancellationToken);
     }
 }

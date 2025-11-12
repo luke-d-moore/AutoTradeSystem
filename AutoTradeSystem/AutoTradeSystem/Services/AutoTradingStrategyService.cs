@@ -188,7 +188,7 @@ namespace AutoTradeSystem.Services
                 }
             }
         }
-        protected async override Task<int> CheckTradingStrategies()
+        protected async override Task<int> CheckTradingStrategies(CancellationToken cancellationToken)
         {
             var IDsToRemove = new List<string>();
 
@@ -200,11 +200,13 @@ namespace AutoTradeSystem.Services
             {
                 if (!currentPrices.TryGetValue(strategy.Value.TradingStrategyDto.Ticker, out var currentPrice)) continue;
 
+                await _tradeActionService.PublishMessage(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.TradingStrategyDto.TradeAction.ToString(), cancellationToken);
+
                 if (currentPrice >= strategy.Value.ActionPrice && strategy.Value.TradingStrategyDto.TradeAction == TradeAction.Sell)
                 {
                     try
                     {
-                        await _tradeActionService.PublishMessage(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.TradingStrategyDto.TradeAction.ToString());
+                        await _tradeActionService.PublishMessage(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.TradingStrategyDto.TradeAction.ToString(), cancellationToken);
                         _logger.LogInformation("Successfully Executed Strategy for {@strategy}", strategy);
                         IDsToRemove.Add(strategy.Key);
                         continue;
@@ -219,7 +221,7 @@ namespace AutoTradeSystem.Services
                 {
                     try
                     {
-                        await _tradeActionService.PublishMessage(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.TradingStrategyDto.TradeAction.ToString());
+                        await _tradeActionService.PublishMessage(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.TradingStrategyDto.TradeAction.ToString(), cancellationToken);
                         _logger.LogInformation("Successfully Executed Strategy for {@strategy}", strategy);
                         IDsToRemove.Add(strategy.Key);
                         continue;

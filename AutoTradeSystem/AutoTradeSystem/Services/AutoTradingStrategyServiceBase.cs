@@ -12,7 +12,7 @@
             _checkRate = checkRate;
             _logger = logger;
         }
-        protected abstract Task CheckTradingStrategies();
+        protected abstract Task CheckTradingStrategies(CancellationToken cancellationToken);
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
@@ -21,7 +21,7 @@
             {
                 try
                 {
-                    await CheckTradingStrategies().ConfigureAwait(false);
+                    await CheckTradingStrategies(cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception exception)
                 {
