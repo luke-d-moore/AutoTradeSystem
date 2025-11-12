@@ -200,8 +200,6 @@ namespace AutoTradeSystem.Services
             {
                 if (!currentPrices.TryGetValue(strategy.Value.TradingStrategyDto.Ticker, out var currentPrice)) continue;
 
-                await _tradeActionService.PublishMessage(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.TradingStrategyDto.TradeAction.ToString(), cancellationToken);
-
                 if (currentPrice >= strategy.Value.ActionPrice && strategy.Value.TradingStrategyDto.TradeAction == TradeAction.Sell)
                 {
                     try
