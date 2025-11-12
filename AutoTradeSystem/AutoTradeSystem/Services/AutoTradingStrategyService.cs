@@ -15,6 +15,8 @@ namespace AutoTradeSystem.Services
         private readonly IDictionary<string, TradingStrategy> _Strategies = new ConcurrentDictionary<string, TradingStrategy>();
         private readonly IPricingService _pricingService;
         private readonly ITradeActionService _tradeActionService;
+        private HashSet<TradeAction> _validActions = new HashSet<TradeAction>() { TradeAction.Buy, TradeAction.Sell };
+
 
         public AutoTradingStrategyService(ILogger<AutoTradingStrategyService> logger, IPricingService pricingService, ITradeActionService tradeActionService)
             : base(_checkRate, logger)
@@ -38,6 +40,11 @@ namespace AutoTradeSystem.Services
             if (TradingStrategy.Ticker == null || (TradingStrategy.Ticker.Length > 5 || TradingStrategy.Ticker.Length < 3))
             {
                 _logger.LogError($"Failed to {CalledFrom}, Ticker was invalid.");
+                return false;
+            }
+            if (!_validActions.Contains(TradingStrategy.TradeAction))
+            {
+                _logger.LogError($"Failed to {CalledFrom}, Invalid Trade Action. Valid values are 0 (Buy) or 1 (Sell).");
                 return false;
             }
             if (TradingStrategy.PriceChange <= 0)
