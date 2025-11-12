@@ -49,6 +49,7 @@ namespace AutoTradeSystem.Services
                     await channel.BasicPublishAsync(
                         exchange: _exchangeName,
                         routingKey: string.Empty,
+                        mandatory: true,
                         body: body).ConfigureAwait(false);
 
                     _logger.LogInformation($"Message published successfully, at {DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture)}");
