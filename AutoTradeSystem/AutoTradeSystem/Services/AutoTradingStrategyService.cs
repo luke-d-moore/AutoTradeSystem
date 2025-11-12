@@ -97,7 +97,7 @@ namespace AutoTradeSystem.Services
 
             if (_Strategies.TryAdd(id, strategy))
             {
-                _logger.LogInformation("Strategy Added Successfully {0}", id);
+                _logger.LogInformation($"Strategy Added Successfully {id}");
                 return true;
             }
             else
@@ -135,12 +135,12 @@ namespace AutoTradeSystem.Services
 
             if (_Strategies.Remove(ID))
             {
-                _logger.LogInformation("Strategy Removed Successfully {0}", ID);
+                _logger.LogInformation($"Strategy Removed Successfully {ID}");
                 return true;
             }
             else
             {
-                _logger.LogError("Failed to Remove Strategy {0}", ID);
+                _logger.LogError($"Failed to Remove Strategy {ID}");
                 return false;
             }
         }
@@ -154,7 +154,7 @@ namespace AutoTradeSystem.Services
 
             if (!_Strategies.TryGetValue(ID, out var currentStrategy))
             {
-                _logger.LogError("Failed to Update Strategy, ID was not found : {0}", ID);
+                _logger.LogError($"Failed to Update Strategy, ID was not found : {ID}");
                 return false;
             }
 
@@ -169,7 +169,7 @@ namespace AutoTradeSystem.Services
             currentStrategy.TradingStrategyDto.PriceChange = tradingStrategy.PriceChange;
             currentStrategy.ActionPrice = newActionPrice.ActionPrice.Value;
 
-            _logger.LogInformation("Strategy Updated Successfully {0}", ID);
+            _logger.LogInformation($"Strategy Updated Successfully {ID}");
 
             return true;
         }
@@ -180,11 +180,11 @@ namespace AutoTradeSystem.Services
             {
                 if (_Strategies.Remove(id))
                 {
-                    _logger.LogInformation("Removed Stretegy Successfully {0}", id);
+                    _logger.LogInformation($"Removed Stretegy Successfully {id}");
                 }
                 else
                 {
-                    _logger.LogError("Failed to Remove Stretegy {0}", id);
+                    _logger.LogError($"Failed to Remove Stretegy {id}");
                 }
             }
         }

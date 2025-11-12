@@ -43,7 +43,7 @@ namespace AutoTradeSystem.Services
                     var message = new Message(ticker, quantity, action);
                     var jsonMessage = JsonSerializer.Serialize(message);
 
-                    _logger.LogInformation($"Publishing Message ID : {message.UniqueID}, Message : {jsonMessage} at {DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture)}");
+                    _logger.LogInformation($"Publishing Message ID : {message.UniqueID}, Message : {jsonMessage}");
                     var body = Encoding.UTF8.GetBytes(jsonMessage);
 
                     await channel.BasicPublishAsync(
@@ -52,18 +52,18 @@ namespace AutoTradeSystem.Services
                         mandatory: true,
                         body: body).ConfigureAwait(false);
 
-                    _logger.LogInformation($"Message published successfully, at {DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture)}");
+                    _logger.LogInformation($"Message published successfully.");
                     break;
                 }
                 catch (OperationCanceledException ex) when (cancellationToken.IsCancellationRequested)
                 {
-                    _logger.LogError(ex, $"Application shutting down at {DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture)}");
+                    _logger.LogError(ex, $"Application shutting down");
                     // If the application is shutting down while trying to connect, exit gracefully
                     throw;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"Failed to publish message at {DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture)}, Retrying connection/publish in {_networkRecoveryInterval} seconds.");
+                    _logger.LogError(ex, $"Failed to publish message, Retrying connection/publish in {_networkRecoveryInterval} seconds.");
                     await Task.Delay(TimeSpan.FromSeconds(_networkRecoveryInterval), cancellationToken).ConfigureAwait(false);
                 }
             }

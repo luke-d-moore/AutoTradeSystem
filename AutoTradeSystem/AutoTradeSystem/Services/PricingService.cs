@@ -23,13 +23,13 @@ namespace AutoTradeSystem.Services
             {
                 HttpClient client = new HttpClient();
 
-                _logger.LogInformation($"GetPriceFromTicker Request for Ticker {ticker}, sent at Time :{DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture)}");
+                _logger.LogInformation($"GetPriceFromTicker Request sent for Ticker {ticker}");
                 using (HttpResponseMessage response = await client.GetAsync(_baseURL + "/GetPrice/" + ticker).ConfigureAwait(false))
                 {
                     using (HttpContent content = response.Content)
                     {
                         var json = await content.ReadAsStringAsync().ConfigureAwait(false);
-                        _logger.LogInformation($"GetPriceFromTicker Response for Ticker {ticker}, received at Time :{DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture)}, response was : {json}");
+                        _logger.LogInformation($"GetPriceFromTicker Response received for Ticker {ticker}, response was : {json}");
                         var responseObject = JsonSerializer.Deserialize<GetPriceResponse>(json);
                         decimal? currentPrice = (responseObject?.Prices.Values.FirstOrDefault());
                         return currentPrice.HasValue ? currentPrice.Value : 0m;
@@ -38,7 +38,7 @@ namespace AutoTradeSystem.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"GetPriceFromTicker Failed for Ticker {ticker}, at Time :{DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture)}, with the following exception message" + ex.Message);
+                _logger.LogError(ex, $"GetPriceFromTicker Failed for Ticker {ticker}, with the following exception message" + ex.Message);
             }
             return 0m;
         }
@@ -48,14 +48,14 @@ namespace AutoTradeSystem.Services
             try
             {
                 HttpClient client = new HttpClient();
-                _logger.LogInformation($"GetAllPrices Request sent at Time :{DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture)}");
+                _logger.LogInformation($"GetAllPrices Request sent");
                 using (HttpResponseMessage response = await client.GetAsync(_baseURL + "/GetAllPrices").ConfigureAwait(false))
                 {
                     using (HttpContent content = response.Content)
                     {
                         var json = await content.ReadAsStringAsync().ConfigureAwait(false);
                         var responseObject = JsonSerializer.Deserialize<GetPriceResponse>(json);
-                        _logger.LogInformation($"GetAllPrices Response received at Time :{DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture)}, response was : {json}");
+                        _logger.LogInformation($"GetAllPrices Response received, response was : {json}");
                         IDictionary<string, decimal> prices = responseObject?.Prices;
                         return prices ?? new Dictionary<string, decimal>();
                     }
@@ -63,7 +63,7 @@ namespace AutoTradeSystem.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"GetAllPrices Failed at Time :{DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture)}, with the following exception message" + ex.Message);
+                _logger.LogError(ex, $"GetAllPrices Failed, with the following exception message" + ex.Message);
             }
             return new Dictionary<string, decimal>();
         }
@@ -73,14 +73,14 @@ namespace AutoTradeSystem.Services
             {
                 HttpClient client = new HttpClient();
 
-                _logger.LogInformation($"GetTickers Request sent at Time :{DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture)}");
+                _logger.LogInformation($"GetTickers Request sent");
 
                 using (HttpResponseMessage response = await client.GetAsync(_baseURL + "/GetTickers").ConfigureAwait(false))
                 {
                     using (HttpContent content = response.Content)
                     {
                         var json = await content.ReadAsStringAsync().ConfigureAwait(false);
-                        _logger.LogInformation($"GetTickers Response received at Time :{DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture)}, response was : {json}");
+                        _logger.LogInformation($"GetTickers Response received, response was : {json}");
                         var responseObject = JsonSerializer.Deserialize<GetTickersResponse>(json);
                         IList<string> tickers = responseObject?.Tickers;
                         return tickers ?? new List<string>();
@@ -89,7 +89,7 @@ namespace AutoTradeSystem.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"GetTickers Failed at Time :{DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture)}, with the following exception message" + ex.Message);
+                _logger.LogError(ex, $"GetTickers Failed, with the following exception message" + ex.Message);
             }
             return new List<string>();
         }
