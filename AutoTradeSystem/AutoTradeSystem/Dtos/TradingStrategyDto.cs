@@ -16,10 +16,12 @@ namespace AutoTradeSystem.Dtos
 
         [Range(0.0001, double.MaxValue, ErrorMessage = "PriceChange must be greater than 0.")]
         [JsonPropertyName("PriceChange")]
+        [Required(ErrorMessage = "Price Change is required.")]
         public decimal PriceChange { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessage = "Quantity must be greater than 0.")]
         [JsonPropertyName("Quantity")]
+        [Required(ErrorMessage = "Quantity is required.")]
         public int Quantity { get; set; }
     }
 
