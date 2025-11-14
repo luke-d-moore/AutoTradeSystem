@@ -12,7 +12,10 @@ namespace AutoTradeSystem.Services
         private IConfiguration _configuration;
         private string _baseURL;
         private HttpClient _client = new HttpClient();
-        private const int _networkRecoveryInterval = 10;
+        public string BaseURL
+        {
+            get { return _baseURL; }
+        }
 
         public PricingService(ILogger<PricingService> logger, IConfiguration configuration) 
         { 
@@ -28,7 +31,7 @@ namespace AutoTradeSystem.Services
                 throw new ArgumentException("Ticker cannot be null or empty.", nameof(ticker));
             }
 
-            var requestUrl = $"{_baseURL}/GetPrice/{ticker}";
+            var requestUrl = $"{BaseURL}/GetPrice/{ticker}";
             _logger.LogInformation($"GetPriceFromTicker Request sent to {requestUrl}");
 
             try
@@ -65,7 +68,7 @@ namespace AutoTradeSystem.Services
 
         public async Task<IDictionary<string, decimal>> GetPrices()
         {
-            var requestUrl = $"{_baseURL}/GetAllPrices";
+            var requestUrl = $"{BaseURL}/GetAllPrices";
 
             _logger.LogInformation($"GetAllPrices Request sent to {requestUrl}");
 
@@ -103,7 +106,7 @@ namespace AutoTradeSystem.Services
 
         public async Task<IList<string>> GetTickers()
         {
-            var requestUrl = $"{_baseURL}/GetTickers";
+            var requestUrl = $"{BaseURL}/GetTickers";
             _logger.LogInformation($"GetTickers Request sent to {requestUrl}");
 
             try
