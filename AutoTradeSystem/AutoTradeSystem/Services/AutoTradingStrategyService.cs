@@ -125,7 +125,9 @@ namespace AutoTradeSystem.Services
 
             decimal multiplyfactor = (100 + movement) / 100.0m;
 
-            decimal? quote = OriginalPrice == 0m ? await _pricingService.GetPriceFromTicker(tradingStrategy.Ticker).ConfigureAwait(false) : OriginalPrice;
+            decimal? quote = OriginalPrice == 0m ? 
+                await _pricingService.GetPriceFromTicker(tradingStrategy.Ticker).ConfigureAwait(false) : 
+                OriginalPrice;
 
             if(quote == null) return (null, null);
 
