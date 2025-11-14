@@ -12,10 +12,17 @@ namespace AutoTradeSystem.Services
     public class TradeActionService : ITradeActionService
     {
         private readonly ILogger<TradeActionService> _logger;
-        private readonly IDictionary<string, TradingStrategy> _Strategies = new ConcurrentDictionary<string, TradingStrategy>();
         private readonly string _exchangeName;
         private readonly string _hostName;
         private const int _networkRecoveryInterval = 10;
+        public string HostName
+        {
+            get => _hostName;
+        }
+        public string ExchangeName
+        {
+            get => _exchangeName;
+        }
 
         public TradeActionService(ILogger<TradeActionService> logger, IConfiguration configuration)
         {
@@ -28,7 +35,7 @@ namespace AutoTradeSystem.Services
         {
             var factory = new ConnectionFactory
             {
-                HostName = _hostName,
+                HostName = HostName,
                 AutomaticRecoveryEnabled = true,
                 NetworkRecoveryInterval = TimeSpan.FromSeconds(_networkRecoveryInterval)
             };
@@ -47,7 +54,7 @@ namespace AutoTradeSystem.Services
                     var body = Encoding.UTF8.GetBytes(jsonMessage);
 
                     await channel.BasicPublishAsync(
-                        exchange: _exchangeName,
+                        exchange: ExchangeName,
                         routingKey: string.Empty,
                         mandatory: true,
                         body: body).ConfigureAwait(false);
