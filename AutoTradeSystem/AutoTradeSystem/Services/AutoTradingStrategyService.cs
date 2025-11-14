@@ -17,6 +17,10 @@ namespace AutoTradeSystem.Services
         private readonly ITradeActionService _tradeActionService;
         private HashSet<TradeAction> _validActions = new HashSet<TradeAction>() { TradeAction.Buy, TradeAction.Sell };
 
+        public IDictionary<string, TradingStrategy> Strategies
+        {
+            get { return _Strategies; }
+        }
 
         public AutoTradingStrategyService(ILogger<AutoTradingStrategyService> logger, IPricingService pricingService, ITradeActionService tradeActionService)
             : base(_checkRate, logger)
@@ -27,7 +31,7 @@ namespace AutoTradeSystem.Services
         }
         public IDictionary<string, TradingStrategy> GetStrategies()
         {
-            return _Strategies;
+            return Strategies;
         }
 
         private async Task<bool> ValidateStrategy(TradingStrategyDto TradingStrategy, string CalledFrom)
@@ -95,7 +99,7 @@ namespace AutoTradeSystem.Services
 
             var strategy = new TradingStrategy(actionPrice.ActionPrice.Value, tradingStrategy, actionPrice.OriginalPrice.Value);
 
-            if (_Strategies.TryAdd(id, strategy))
+            if (Strategies.TryAdd(id, strategy))
             {
                 _logger.LogInformation($"Strategy Added Successfully {id}");
                 return true;
@@ -133,7 +137,7 @@ namespace AutoTradeSystem.Services
             await Task.Delay(0);
             if(ID == null) return false;
 
-            if (_Strategies.Remove(ID))
+            if (Strategies.Remove(ID))
             {
                 _logger.LogInformation($"Strategy Removed Successfully {ID}");
                 return true;
@@ -152,7 +156,7 @@ namespace AutoTradeSystem.Services
                 return false;
             }
 
-            if (!_Strategies.TryGetValue(ID, out var currentStrategy))
+            if (!Strategies.TryGetValue(ID, out var currentStrategy))
             {
                 _logger.LogError($"Failed to Update Strategy, ID was not found : {ID}");
                 return false;
@@ -178,7 +182,7 @@ namespace AutoTradeSystem.Services
         {
             foreach(var id in IdsToRemove)
             {
-                if (_Strategies.Remove(id))
+                if (Strategies.Remove(id))
                 {
                     _logger.LogInformation($"Removed Stretegy Successfully {id}");
                 }
@@ -194,9 +198,13 @@ namespace AutoTradeSystem.Services
 
             var currentPrices = await _pricingService.GetPrices().ConfigureAwait(false);
 
-            if (!currentPrices.Any()) return 0;
+            if (!currentPrices.Any())
+            {
+                _logger.LogError("Failed to get current prices");
+                return 0;
+            }
 
-            foreach (var strategy in _Strategies)
+            foreach (var strategy in Strategies)
             {
                 if (!currentPrices.TryGetValue(strategy.Value.TradingStrategyDto.Ticker, out var currentPrice)) continue;
 
@@ -211,7 +219,7 @@ namespace AutoTradeSystem.Services
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogInformation(ex, "Failed to Execute Strategy for {@strategy}", strategy);
+                        _logger.LogError(ex, "Failed to Execute Strategy for {@strategy}", strategy);
                     }
                 }
 
@@ -226,7 +234,7 @@ namespace AutoTradeSystem.Services
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogInformation(ex, "Failed to Execute Strategy for {@strategy}", strategy);
+                        _logger.LogError(ex, "Failed to Execute Strategy for {@strategy}", strategy);
                     }
                 }
             }

@@ -11,6 +11,9 @@ namespace AutoTradeSystem.Services
         private readonly ILogger<PricingService> _logger;
         private IConfiguration _configuration;
         private string _baseURL;
+        private HttpClient _client = new HttpClient();
+        private const int _networkRecoveryInterval = 10;
+
         public PricingService(ILogger<PricingService> logger, IConfiguration configuration) 
         { 
             _logger = logger;
@@ -19,77 +22,113 @@ namespace AutoTradeSystem.Services
         }
         public async Task<decimal> GetPriceFromTicker(string ticker)
         {
+            if (string.IsNullOrEmpty(ticker))
+            {
+                _logger.LogWarning("GetPriceFromTicker called with null or empty ticker.");
+                throw new ArgumentException("Ticker cannot be null or empty.", nameof(ticker));
+            }
+
+            var requestUrl = $"{_baseURL}/GetPrice/{ticker}";
+            _logger.LogInformation($"GetPriceFromTicker Request sent to {requestUrl}");
+
             try
             {
-                HttpClient client = new HttpClient();
-
-                _logger.LogInformation($"GetPriceFromTicker Request sent for Ticker {ticker}");
-                using (HttpResponseMessage response = await client.GetAsync(_baseURL + "/GetPrice/" + ticker).ConfigureAwait(false))
+                using (HttpResponseMessage response = await _client.GetAsync(requestUrl).ConfigureAwait(false))
                 {
-                    using (HttpContent content = response.Content)
+                    response.EnsureSuccessStatusCode();
+
+                    var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    _logger.LogInformation($"GetPriceFromTicker Response received for Ticker {ticker}, response : {json}");
+
+                    var responseObject = JsonSerializer.Deserialize<GetPriceResponse>(json);
+
+                    decimal? currentPrice = (responseObject?.Prices?.Values.FirstOrDefault());
+
+                    if (!currentPrice.HasValue || currentPrice.Value <= 0m)
                     {
-                        var json = await content.ReadAsStringAsync().ConfigureAwait(false);
-                        _logger.LogInformation($"GetPriceFromTicker Response received for Ticker {ticker}, response was : {json}");
-                        var responseObject = JsonSerializer.Deserialize<GetPriceResponse>(json);
-                        decimal? currentPrice = (responseObject?.Prices.Values.FirstOrDefault());
-                        return currentPrice.HasValue ? currentPrice.Value : 0m;
+                        throw new InvalidOperationException($"Invalid or missing price data in valid response for ticker: {ticker}");
                     }
+
+                    return currentPrice.Value;
                 }
             }
-            catch (Exception ex)
+            catch (HttpRequestException ex)
             {
-                _logger.LogError(ex, $"GetPriceFromTicker Failed for Ticker {ticker}, with the following exception message" + ex.Message);
+                _logger.LogError(ex, $"HTTP request failed for Ticker {ticker}. Status Code: {ex.StatusCode}");
             }
-            return 0m;
+            catch (Exception ex) 
+            {
+                _logger.LogError(ex, $"An unexpected error occurred while fetching price for Ticker {ticker}.");
+            }
+            return 0;
         }
 
         public async Task<IDictionary<string, decimal>> GetPrices()
         {
+            var requestUrl = $"{_baseURL}/GetAllPrices";
+
+            _logger.LogInformation($"GetAllPrices Request sent to {requestUrl}");
+
             try
             {
-                HttpClient client = new HttpClient();
-                _logger.LogInformation($"GetAllPrices Request sent");
-                using (HttpResponseMessage response = await client.GetAsync(_baseURL + "/GetAllPrices").ConfigureAwait(false))
+                using (HttpResponseMessage response = await _client.GetAsync(requestUrl).ConfigureAwait(false))
                 {
-                    using (HttpContent content = response.Content)
-                    {
-                        var json = await content.ReadAsStringAsync().ConfigureAwait(false);
-                        var responseObject = JsonSerializer.Deserialize<GetPriceResponse>(json);
-                        _logger.LogInformation($"GetAllPrices Response received, response was : {json}");
-                        IDictionary<string, decimal> prices = responseObject?.Prices;
-                        return prices ?? new Dictionary<string, decimal>();
-                    }
+                    response.EnsureSuccessStatusCode();
+
+                    var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    _logger.LogInformation($"GetAllPrices Response received. Response : {json}");
+
+                    var responseObject = JsonSerializer.Deserialize<GetPriceResponse>(json);
+
+                    IDictionary<string, decimal> prices = responseObject?.Prices;
+
+                    return prices ?? new Dictionary<string, decimal>();
                 }
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, $"GetAllPrices Failed due to HTTP request error. Status Code: {ex.StatusCode}");
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "GetAllPrices Failed JSON deserialization");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"GetAllPrices Failed, with the following exception message" + ex.Message);
+                _logger.LogError(ex, "An unexpected error occurred while getting all prices.");
             }
             return new Dictionary<string, decimal>();
         }
+
         public async Task<IList<string>> GetTickers()
         {
+            var requestUrl = $"{_baseURL}/GetTickers";
+            _logger.LogInformation($"GetTickers Request sent to {requestUrl}");
+
             try
             {
-                HttpClient client = new HttpClient();
-
-                _logger.LogInformation($"GetTickers Request sent");
-
-                using (HttpResponseMessage response = await client.GetAsync(_baseURL + "/GetTickers").ConfigureAwait(false))
+                using (HttpResponseMessage response = await _client.GetAsync(requestUrl).ConfigureAwait(false))
                 {
-                    using (HttpContent content = response.Content)
-                    {
-                        var json = await content.ReadAsStringAsync().ConfigureAwait(false);
-                        _logger.LogInformation($"GetTickers Response received, response was : {json}");
-                        var responseObject = JsonSerializer.Deserialize<GetTickersResponse>(json);
-                        IList<string> tickers = responseObject?.Tickers;
-                        return tickers ?? new List<string>();
-                    }
+                    response.EnsureSuccessStatusCode();
+
+                    var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    _logger.LogInformation($"GetTickers Response received. Response : {json}");
+
+                    var responseObject = JsonSerializer.Deserialize<GetTickersResponse>(json);
+
+                    IList<string> tickers = responseObject?.Tickers;
+
+                    return tickers ?? new List<string>();
                 }
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, $"GetTickers Failed due to HTTP request error. Status Code: {ex.StatusCode}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"GetTickers Failed, with the following exception message" + ex.Message);
+                _logger.LogError(ex, "An unexpected error occurred while getting tickers.");
             }
             return new List<string>();
         }
