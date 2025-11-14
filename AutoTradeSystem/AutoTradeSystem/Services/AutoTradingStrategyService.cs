@@ -16,7 +16,6 @@ namespace AutoTradeSystem.Services
         private readonly IPricingService _pricingService;
         private readonly ITradeActionService _tradeActionService;
         private HashSet<TradeAction> _validActions = new HashSet<TradeAction>() { TradeAction.Buy, TradeAction.Sell };
-
         public ConcurrentDictionary<string, TradingStrategy> Strategies
         {
             get { return _Strategies; }
@@ -25,7 +24,6 @@ namespace AutoTradeSystem.Services
         {
             get { return _validActions; }
         }
-
         public AutoTradingStrategyService(ILogger<AutoTradingStrategyService> logger, 
             IPricingService pricingService, 
             ITradeActionService tradeActionService)
@@ -39,7 +37,6 @@ namespace AutoTradeSystem.Services
         {
             return Strategies;
         }
-
         private async Task<bool> ValidateStrategy(TradingStrategyDto TradingStrategy, string CalledFrom)
         {
             if (TradingStrategy == null)
@@ -82,7 +79,6 @@ namespace AutoTradeSystem.Services
 
             return true;
         }
-
         private bool ValidateActionPrice(decimal? ActionPrice, decimal? OriginalPrice, string CalledFrom)
         {
             if (!ActionPrice.HasValue || !OriginalPrice.HasValue)
@@ -92,7 +88,6 @@ namespace AutoTradeSystem.Services
             }
             return true;
         }
-
         public async Task<bool> AddStrategy(TradingStrategyDto tradingStrategy)
         {
             if(!await ValidateStrategy(tradingStrategy, "Add Strategy").ConfigureAwait(false)) return false;
@@ -116,7 +111,6 @@ namespace AutoTradeSystem.Services
                 return false;
             }
         }
-
         private async Task<(decimal? ActionPrice, decimal? OriginalPrice)> GetActionPrice(TradingStrategyDto tradingStrategy, decimal OriginalPrice = 0m)
         {
             //we need to keep a record of the price that we will action the strategy
@@ -137,7 +131,6 @@ namespace AutoTradeSystem.Services
 
             return (quote * multiplyfactor, quote);
         }
-
         public async Task<bool> RemoveStrategy(string ID)
         {
             await Task.Delay(0);
@@ -170,7 +163,10 @@ namespace AutoTradeSystem.Services
 
             if (!await ValidateStrategy(tradingStrategy, "Update Strategy").ConfigureAwait(false)) return false;
 
-            var newActionPrice = await GetActionPrice(tradingStrategy, currentStrategy.OriginalPrice).ConfigureAwait(false);
+            var newActionPrice = await GetActionPrice(
+                tradingStrategy, 
+                currentStrategy.OriginalPrice)
+                .ConfigureAwait(false);
             if (!ValidateActionPrice(newActionPrice.ActionPrice, newActionPrice.OriginalPrice, "Update Strategy")) return false;
 
             currentStrategy.TradingStrategyDto.TradeAction = tradingStrategy.TradeAction;
@@ -183,7 +179,6 @@ namespace AutoTradeSystem.Services
 
             return true;
         }
-
         private void RemoveStrategies(IList<string> IdsToRemove)
         {
             foreach(var id in IdsToRemove)
@@ -214,11 +209,16 @@ namespace AutoTradeSystem.Services
             {
                 if (!currentPrices.TryGetValue(strategy.Value.TradingStrategyDto.Ticker, out var currentPrice)) continue;
 
-                if (currentPrice >= strategy.Value.ActionPrice && strategy.Value.TradingStrategyDto.TradeAction == TradeAction.Sell)
+                if (currentPrice >= strategy.Value.ActionPrice && 
+                    strategy.Value.TradingStrategyDto.TradeAction == TradeAction.Sell)
                 {
                     try
                     {
-                        await _tradeActionService.PublishMessage(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.TradingStrategyDto.TradeAction.ToString(), cancellationToken);
+                        await _tradeActionService.PublishMessage(
+                            strategy.Value.TradingStrategyDto.Ticker, 
+                            strategy.Value.TradingStrategyDto.Quantity, 
+                            strategy.Value.TradingStrategyDto.TradeAction.ToString(), 
+                            cancellationToken);
                         _logger.LogInformation("Successfully Executed Strategy for {@strategy}", strategy);
                         IDsToRemove.Add(strategy.Key);
                         continue;
@@ -229,11 +229,16 @@ namespace AutoTradeSystem.Services
                     }
                 }
 
-                if (currentPrice <= strategy.Value.ActionPrice && strategy.Value.TradingStrategyDto.TradeAction == TradeAction.Buy)
+                if (currentPrice <= strategy.Value.ActionPrice && 
+                    strategy.Value.TradingStrategyDto.TradeAction == TradeAction.Buy)
                 {
                     try
                     {
-                        await _tradeActionService.PublishMessage(strategy.Value.TradingStrategyDto.Ticker, strategy.Value.TradingStrategyDto.Quantity, strategy.Value.TradingStrategyDto.TradeAction.ToString(), cancellationToken);
+                        await _tradeActionService.PublishMessage(
+                            strategy.Value.TradingStrategyDto.Ticker, 
+                            strategy.Value.TradingStrategyDto.Quantity, 
+                            strategy.Value.TradingStrategyDto.TradeAction.ToString(), 
+                            cancellationToken);
                         _logger.LogInformation("Successfully Executed Strategy for {@strategy}", strategy);
                         IDsToRemove.Add(strategy.Key);
                         continue;
