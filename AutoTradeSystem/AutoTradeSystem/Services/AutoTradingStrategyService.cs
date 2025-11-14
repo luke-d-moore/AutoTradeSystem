@@ -12,17 +12,23 @@ namespace AutoTradeSystem.Services
     {
         private const int _checkRate = 5000;
         private readonly ILogger<AutoTradingStrategyService> _logger;
-        private readonly IDictionary<string, TradingStrategy> _Strategies = new ConcurrentDictionary<string, TradingStrategy>();
+        private readonly ConcurrentDictionary<string, TradingStrategy> _Strategies = new ConcurrentDictionary<string, TradingStrategy>();
         private readonly IPricingService _pricingService;
         private readonly ITradeActionService _tradeActionService;
         private HashSet<TradeAction> _validActions = new HashSet<TradeAction>() { TradeAction.Buy, TradeAction.Sell };
 
-        public IDictionary<string, TradingStrategy> Strategies
+        public ConcurrentDictionary<string, TradingStrategy> Strategies
         {
             get { return _Strategies; }
         }
+        public HashSet<TradeAction> ValidActions
+        {
+            get { return _validActions; }
+        }
 
-        public AutoTradingStrategyService(ILogger<AutoTradingStrategyService> logger, IPricingService pricingService, ITradeActionService tradeActionService)
+        public AutoTradingStrategyService(ILogger<AutoTradingStrategyService> logger, 
+            IPricingService pricingService, 
+            ITradeActionService tradeActionService)
             : base(_checkRate, logger)
         {
             _logger = logger;
@@ -46,7 +52,7 @@ namespace AutoTradeSystem.Services
                 _logger.LogError($"Failed to {CalledFrom}, Ticker was invalid.");
                 return false;
             }
-            if (!_validActions.Contains(TradingStrategy.TradeAction))
+            if (!ValidActions.Contains(TradingStrategy.TradeAction))
             {
                 _logger.LogError($"Failed to {CalledFrom}, Invalid Trade Action. Valid values are 0 (Buy) or 1 (Sell).");
                 return false;
@@ -137,7 +143,7 @@ namespace AutoTradeSystem.Services
             await Task.Delay(0);
             if(ID == null) return false;
 
-            if (Strategies.Remove(ID))
+            if (Strategies.TryRemove(ID, out var removedStrategy))
             {
                 _logger.LogInformation($"Strategy Removed Successfully {ID}");
                 return true;
@@ -182,7 +188,7 @@ namespace AutoTradeSystem.Services
         {
             foreach(var id in IdsToRemove)
             {
-                if (Strategies.Remove(id))
+                if (Strategies.TryRemove(id, out var removedStrategy))
                 {
                     _logger.LogInformation($"Removed Stretegy Successfully {id}");
                 }
