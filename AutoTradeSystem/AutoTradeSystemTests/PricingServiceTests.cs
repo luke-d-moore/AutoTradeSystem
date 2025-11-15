@@ -62,7 +62,7 @@ namespace AutoTradeSystemTests
             return mockHttpClientFactory.Object;
         }
         [Fact]
-        public async Task GetPrices_GivenValidTicker_ReturnsPriceSuccessfully()
+        public async Task GetPrices_ReturnsPriceSuccessfully()
         {
             // Arrange
             var mockResponseContent = JsonSerializer.Serialize(new GetPriceResponse(true, "", new Dictionary<string, decimal>()));
@@ -127,7 +127,6 @@ namespace AutoTradeSystemTests
                 SetupFactory(httpResponse)
             );
 
-            var exceptionType = typeof(JsonException);
             // Act and Assert
             var result = await pricingService.GetPrices();
             _priceLogger.Verify(
@@ -150,8 +149,6 @@ namespace AutoTradeSystemTests
                 Content = new StringContent(mockResponseContent, System.Text.Encoding.UTF8, "application/json")
             };
 
-            var exceptionType = typeof(Exception);
-
             var pricingService = new PricingService(
                 _priceLogger.Object,
                 _configuration.Object,
@@ -169,7 +166,7 @@ namespace AutoTradeSystemTests
             Times.Once);
         }
         [Fact]
-        public async Task GetTickers_GivenValidTicker_ReturnsPriceSuccessfully()
+        public async Task GetTickers_ReturnsTickersSuccessfully()
         {
             // Arrange
             var mockResponseContent = JsonSerializer.Serialize(new GetTickersResponse(true, "", new List<string>()));
@@ -192,7 +189,6 @@ namespace AutoTradeSystemTests
         public async Task GetTickers_ApiReturnsErrorStatusCode_ThrowsHttpRequestException()
         {
             // Arrange
-            var exceptionType = typeof(HttpRequestException);
             var mockResponseContent = JsonSerializer.Serialize(new GetTickersResponse(true, "", new List<string>()));
             var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
             {
@@ -234,7 +230,6 @@ namespace AutoTradeSystemTests
                 SetupFactory(httpResponse)
             );
 
-            var exceptionType = typeof(JsonException);
             // Act and Assert
             var result = await pricingService.GetTickers();
             _priceLogger.Verify(
@@ -256,8 +251,6 @@ namespace AutoTradeSystemTests
             {
                 Content = new StringContent(mockResponseContent, System.Text.Encoding.UTF8, "application/json")
             };
-
-            var exceptionType = typeof(Exception);
 
             var pricingService = new PricingService(
                 _priceLogger.Object,
@@ -308,22 +301,19 @@ namespace AutoTradeSystemTests
         public async Task GetPriceFromTicker_GivenNullOrEmptyTicker_ThrowsArgumentException(string invalidTicker)
         {
             // Arrange
-            var exceptionType = typeof(ArgumentException);
-
             var pricingService = new PricingService(
                 _priceLogger.Object,
                 _configuration.Object,
                 SetupFactory(new HttpResponseMessage(), true)
             );
             // Act and Assert
-            var result = await Assert.ThrowsAsync(exceptionType, () => pricingService.GetPriceFromTicker(invalidTicker));
+            var result = await Assert.ThrowsAsync<ArgumentException>(() => pricingService.GetPriceFromTicker(invalidTicker));
         }
         [Fact]
         public async Task GetPriceFromTicker_ApiReturnsErrorStatusCode_ThrowsHttpRequestException()
         {
             // Arrange
             var ticker = "TSLA";
-            var exceptionType = typeof(HttpRequestException);
             var mockResponseContent = JsonSerializer.Serialize(new GetPriceResponse(true, "", new Dictionary<string, decimal>() { { ticker, 0m } }));
             var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
             {
@@ -365,7 +355,6 @@ namespace AutoTradeSystemTests
                 SetupFactory(httpResponse)
             );
 
-            var exceptionType = typeof(JsonException);
             // Act and Assert
             var result = await pricingService.GetPriceFromTicker(ticker);
             _priceLogger.Verify(
@@ -394,7 +383,6 @@ namespace AutoTradeSystemTests
                 SetupFactory(httpResponse)
             );
 
-            var exceptionType = typeof(InvalidOperationException);
             // Act and Assert
             var result = await pricingService.GetPriceFromTicker(ticker);
             _priceLogger.Verify(
@@ -402,7 +390,7 @@ namespace AutoTradeSystemTests
             LogLevel.Error,
             It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((o, t) => o.ToString().Contains($"An unexpected error occurred while fetching price for Ticker {ticker}")),
-                It.IsAny<Exception>(),
+                It.IsAny<InvalidOperationException>(),
                 (Func<It.IsAnyType, Exception, string>)It.IsAny<object>()),
             Times.Once);
         }
