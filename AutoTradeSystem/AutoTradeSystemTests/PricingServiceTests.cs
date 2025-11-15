@@ -85,7 +85,6 @@ namespace AutoTradeSystemTests
         public async Task GetPrices_ApiReturnsErrorStatusCode_ThrowsHttpRequestException()
         {
             // Arrange
-            var exceptionType = typeof(HttpRequestException);
             var mockResponseContent = JsonSerializer.Serialize(new GetPriceResponse(true, "", new Dictionary<string, decimal>()));
             var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
             {
