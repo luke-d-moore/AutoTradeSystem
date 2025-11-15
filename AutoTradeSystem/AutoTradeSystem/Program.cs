@@ -34,6 +34,8 @@ builder.Services.AddHostedService(p => p.GetRequiredService<IAutoTradingStrategy
 builder.Services.AddSingleton<IPricingService, PricingService>();
 builder.Services.AddSingleton<ITradeActionService, TradeActionService>();
 
+builder.Services.AddHttpClient();
+
 var app = builder.Build();
 
 app.UseDefaultFiles();

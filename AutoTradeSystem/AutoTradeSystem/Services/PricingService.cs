@@ -11,17 +11,21 @@ namespace AutoTradeSystem.Services
         private readonly ILogger<PricingService> _logger;
         private IConfiguration _configuration;
         private string _baseURL;
-        private HttpClient _client = new HttpClient();
+        private IHttpClientFactory _httpClientFactory;
+        private HttpClient _client;
         public string BaseURL
         {
             get { return _baseURL; }
         }
 
-        public PricingService(ILogger<PricingService> logger, IConfiguration configuration) 
+        public PricingService(ILogger<PricingService> logger, IConfiguration configuration, IHttpClientFactory httpClientFactory) 
         { 
             _logger = logger;
             _configuration = configuration;
             _baseURL = _configuration["PricingSystemBaseURL"];
+            _httpClientFactory = httpClientFactory;
+            _client = _httpClientFactory.CreateClient();
+
         }
         public async Task<decimal> GetPriceFromTicker(string ticker)
         {
@@ -128,6 +132,10 @@ namespace AutoTradeSystem.Services
             catch (HttpRequestException ex)
             {
                 _logger.LogError(ex, $"GetTickers Failed due to HTTP request error. Status Code: {ex.StatusCode}");
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "GetTickers Failed JSON deserialization");
             }
             catch (Exception ex)
             {
