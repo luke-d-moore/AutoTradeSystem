@@ -8,6 +8,8 @@ using System.Collections.Concurrent;
 using Moq.Protected;
 using System.Net;
 using System.Text.Json;
+using Serilog.Filters;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace AutoTradeSystemTests
 {
@@ -269,6 +271,137 @@ namespace AutoTradeSystemTests
                 LogLevel.Error,
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((o, t) => o.ToString().Contains("An unexpected error occurred while getting tickers")),
+                It.IsAny<Exception>(),
+                (Func<It.IsAnyType, Exception, string>)It.IsAny<object>()),
+            Times.Once);
+        }
+
+        [Fact]
+        public async Task GetPriceFromTicker_GivenValidTicker_ReturnsPriceSuccessfully()
+        {
+            // Arrange
+            var expectedPrice = 123.45m;
+            var ticker = "TSLA";
+
+            var mockResponseContent = JsonSerializer.Serialize(new GetPriceResponse(true, "", new Dictionary<string, decimal>() { { ticker, expectedPrice } }));
+            var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(mockResponseContent, System.Text.Encoding.UTF8, "application/json")
+            };
+
+            var pricingService = new PricingService(
+                _priceLogger.Object,
+                _configuration.Object,
+                SetupFactory(httpResponse)
+            );
+
+            // Act
+            var result = await pricingService.GetPriceFromTicker(ticker);
+
+            // Assert
+            result.Equals(expectedPrice);
+        }
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData(" ")]
+        public async Task GetPriceFromTicker_GivenNullOrEmptyTicker_ThrowsArgumentException(string invalidTicker)
+        {
+            // Arrange
+            var exceptionType = typeof(ArgumentException);
+
+            var pricingService = new PricingService(
+                _priceLogger.Object,
+                _configuration.Object,
+                SetupFactory(new HttpResponseMessage(), true)
+            );
+            // Act and Assert
+            var result = await Assert.ThrowsAsync(exceptionType, () => pricingService.GetPriceFromTicker(invalidTicker));
+        }
+        [Fact]
+        public async Task GetPriceFromTicker_ApiReturnsErrorStatusCode_ThrowsHttpRequestException()
+        {
+            // Arrange
+            var ticker = "TSLA";
+            var exceptionType = typeof(HttpRequestException);
+            var mockResponseContent = JsonSerializer.Serialize(new GetPriceResponse(true, "", new Dictionary<string, decimal>() { { ticker, 0m } }));
+            var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(mockResponseContent, System.Text.Encoding.UTF8, "application/json")
+            };
+
+            var pricingService = new PricingService(
+                _priceLogger.Object,
+                _configuration.Object,
+                SetupFactory(httpResponse, true)
+            );
+            // Act and Assert
+            var result = await pricingService.GetPriceFromTicker(ticker);
+            _priceLogger.Verify(
+            x => x.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((o, t) => o.ToString().Contains("HTTP request failed for Ticker")),
+                It.IsAny<HttpRequestException>(),
+                (Func<It.IsAnyType, Exception, string>)It.IsAny<object>()),
+            Times.Once);
+        }
+        [Theory]
+        [InlineData("")]
+        [InlineData(" ")]
+        public async Task GetPriceFromTicker_ApiReturnsMalformedJson_ThrowsJsonException(string response)
+        {
+            // Arrange
+            var ticker = "TSLA";
+            var mockResponseContent = response;
+            var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(mockResponseContent, System.Text.Encoding.UTF8, "application/json")
+            };
+
+            var pricingService = new PricingService(
+                _priceLogger.Object,
+                _configuration.Object,
+                SetupFactory(httpResponse)
+            );
+
+            var exceptionType = typeof(JsonException);
+            // Act and Assert
+            var result = await pricingService.GetPriceFromTicker(ticker);
+            _priceLogger.Verify(
+            x => x.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((o, t) => o.ToString().Contains($"Get Price for Ticker {ticker} Failed JSON deserialization")),
+                It.IsAny<JsonException>(),
+                (Func<It.IsAnyType, Exception, string>)It.IsAny<object>()),
+            Times.Once);
+        }
+        [Fact]
+        public async Task GetPriceFromTicker_ApiReturnsJsonWithoutPriceValue_ThrowsInvalidOperationException()
+        {
+            // Arrange
+            var ticker = "TSLA";
+            var mockResponseContent = JsonSerializer.Serialize(new GetPriceResponse(true, "", new Dictionary<string, decimal>() { { ticker, 0m } }));
+            var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(mockResponseContent, System.Text.Encoding.UTF8, "application/json")
+            };
+
+            var pricingService = new PricingService(
+                _priceLogger.Object,
+                _configuration.Object,
+                SetupFactory(httpResponse, true, true)
+            );
+
+            var exceptionType = typeof(InvalidOperationException);
+            // Act and Assert
+            var result = await pricingService.GetPriceFromTicker(ticker);
+            _priceLogger.Verify(
+            x => x.Log(
+            LogLevel.Error,
+            It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((o, t) => o.ToString().Contains($"An unexpected error occurred while fetching price for Ticker {ticker}")),
                 It.IsAny<Exception>(),
                 (Func<It.IsAnyType, Exception, string>)It.IsAny<object>()),
             Times.Once);

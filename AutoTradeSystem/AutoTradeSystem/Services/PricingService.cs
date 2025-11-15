@@ -29,7 +29,7 @@ namespace AutoTradeSystem.Services
         }
         public async Task<decimal> GetPriceFromTicker(string ticker)
         {
-            if (string.IsNullOrEmpty(ticker))
+            if (string.IsNullOrWhiteSpace(ticker))
             {
                 _logger.LogWarning("GetPriceFromTicker called with null or empty ticker.");
                 throw new ArgumentException("Ticker cannot be null or empty.", nameof(ticker));
@@ -62,6 +62,10 @@ namespace AutoTradeSystem.Services
             catch (HttpRequestException ex)
             {
                 _logger.LogError(ex, $"HTTP request failed for Ticker {ticker}. Status Code: {ex.StatusCode}");
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, $"Get Price for Ticker {ticker} Failed JSON deserialization");
             }
             catch (Exception ex) 
             {
