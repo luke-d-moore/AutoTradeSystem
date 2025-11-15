@@ -14,6 +14,7 @@ namespace AutoTradeSystem.Services
         private readonly ILogger<TradeActionService> _logger;
         private readonly string _exchangeName;
         private readonly string _hostName;
+        private readonly IConnectionFactory _connectionFactory;
         private const int _networkRecoveryInterval = 10;
         public string HostName
         {
@@ -24,28 +25,23 @@ namespace AutoTradeSystem.Services
             get => _exchangeName;
         }
 
-        public TradeActionService(ILogger<TradeActionService> logger, IConfiguration configuration)
+        public TradeActionService(ILogger<TradeActionService> logger, IConfiguration configuration, IConnectionFactory connectionFactory)
         {
             _logger = logger;
             _exchangeName = configuration["RabbitMQExchange"];
             _hostName = configuration["ConnectionHostName"];
+            _connectionFactory = connectionFactory;
         }
 
         public async Task PublishMessage(string ticker, int quantity, string action, CancellationToken cancellationToken)
         {
-            var factory = new ConnectionFactory
-            {
-                HostName = HostName,
-                AutomaticRecoveryEnabled = true,
-                NetworkRecoveryInterval = TimeSpan.FromSeconds(_networkRecoveryInterval)
-            };
 
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    using var connection = await factory.CreateConnectionAsync().ConfigureAwait(false);
-                    using var channel = await connection.CreateChannelAsync().ConfigureAwait(false);
+                    using var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken).ConfigureAwait(false);
+                    using var channel = await connection.CreateChannelAsync(null,cancellationToken).ConfigureAwait(false);
 
                     var message = new Message(ticker, quantity, action);
                     var jsonMessage = JsonSerializer.Serialize(message);

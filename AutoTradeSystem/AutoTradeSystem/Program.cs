@@ -2,6 +2,7 @@ using AutoTradeSystem.Services;
 using Serilog;
 using AutoTradeSystem.Logging;
 using AutoTradeSystem.Interfaces;
+using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,19 @@ var configuration = configurationBuilder.Build();
 builder.Services.AddSingleton<IConfiguration>(configuration);
 LogConfiguration.ConfigureSerilog(configuration);
 builder.Services.AddLogging(configure => { configure.AddSerilog(); });
+
+builder.Services.AddSingleton<IConnectionFactory>(sp =>
+{
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    var factory = new ConnectionFactory
+    {
+        HostName = configuration["ConnectionHostName"],
+        AutomaticRecoveryEnabled = true,
+        NetworkRecoveryInterval = TimeSpan.FromSeconds(
+            int.Parse(configuration["NetworkRecoveryIntervalSeconds"] ?? "10"))
+    };
+    return factory;
+});
 
 builder.Services.AddSingleton<IAutoTradingStrategyService, AutoTradingStrategyService>();
 builder.Services.AddHostedService(p => p.GetRequiredService<IAutoTradingStrategyService>());
