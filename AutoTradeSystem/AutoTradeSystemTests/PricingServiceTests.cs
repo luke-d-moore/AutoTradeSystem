@@ -391,7 +391,7 @@ namespace AutoTradeSystemTests
             var pricingService = new PricingService(
                 _priceLogger.Object,
                 _configuration.Object,
-                SetupFactory(httpResponse, true, true)
+                SetupFactory(httpResponse)
             );
 
             var exceptionType = typeof(InvalidOperationException);
