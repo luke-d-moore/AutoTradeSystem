@@ -1,24 +1,37 @@
 ﻿using AutoTradeSystem.Interfaces;
 using Serilog;
 using System;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
 
 namespace AutoTradeSystem.Services
 {
-    public class PricingService : IPricingService
+    public class PricingService : PricingServiceBase, IPricingService
     {
         private readonly ILogger<PricingService> _logger;
         private IConfiguration _configuration;
         private string _baseURL;
         private IHttpClientFactory _httpClientFactory;
         private HttpClient _client;
+        private const int _checkRate = 5000;
+        private ConcurrentDictionary<string, decimal> _prices = new ConcurrentDictionary<string, decimal>();
+        public ConcurrentDictionary<string, decimal> Prices
+        {
+            get { return _prices; }
+            set 
+            { 
+                _prices = value; 
+            }
+        }
         public string BaseURL
         {
             get { return _baseURL; }
         }
 
-        public PricingService(ILogger<PricingService> logger, IConfiguration configuration, IHttpClientFactory httpClientFactory) 
+        public PricingService(ILogger<PricingService> logger, IConfiguration configuration, IHttpClientFactory httpClientFactory)
+            : base(logger, _checkRate)
         { 
             _logger = logger;
             _configuration = configuration;
@@ -27,53 +40,6 @@ namespace AutoTradeSystem.Services
             _client = _httpClientFactory.CreateClient();
 
         }
-        public async Task<decimal> GetPriceFromTicker(string ticker)
-        {
-            if (string.IsNullOrWhiteSpace(ticker))
-            {
-                _logger.LogWarning("GetPriceFromTicker called with null or empty ticker.");
-                throw new ArgumentException("Ticker cannot be null or empty.", nameof(ticker));
-            }
-
-            var requestUrl = $"{BaseURL}/GetPrice/{ticker}";
-            _logger.LogInformation($"GetPriceFromTicker Request sent to {requestUrl}");
-
-            try
-            {
-                using (HttpResponseMessage response = await _client.GetAsync(requestUrl).ConfigureAwait(false))
-                {
-                    response.EnsureSuccessStatusCode();
-
-                    var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    _logger.LogInformation($"GetPriceFromTicker Response received for Ticker {ticker}, response : {json}");
-
-                    var responseObject = JsonSerializer.Deserialize<GetPriceResponse>(json);
-
-                    decimal? currentPrice = (responseObject?.Prices?.Values.FirstOrDefault());
-
-                    if (!currentPrice.HasValue || currentPrice.Value <= 0m)
-                    {
-                        throw new InvalidOperationException($"Invalid or missing price data in valid response for ticker: {ticker}");
-                    }
-
-                    return currentPrice.Value;
-                }
-            }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogError(ex, $"HTTP request failed for Ticker {ticker}. Status Code: {ex.StatusCode}");
-            }
-            catch (JsonException ex)
-            {
-                _logger.LogError(ex, $"Get Price for Ticker {ticker} Failed JSON deserialization");
-            }
-            catch (Exception ex) 
-            {
-                _logger.LogError(ex, $"An unexpected error occurred while fetching price for Ticker {ticker}.");
-            }
-            return 0;
-        }
-
         public async Task<IDictionary<string, decimal>> GetPrices()
         {
             var requestUrl = $"{BaseURL}/GetAllPrices";
@@ -112,40 +78,33 @@ namespace AutoTradeSystem.Services
             return new Dictionary<string, decimal>();
         }
 
-        public async Task<IList<string>> GetTickers()
+        private Task SetPrices(IDictionary<string, decimal> prices)
         {
-            var requestUrl = $"{BaseURL}/GetTickers";
-            _logger.LogInformation($"GetTickers Request sent to {requestUrl}");
-
-            try
+            foreach (var price in prices)
             {
-                using (HttpResponseMessage response = await _client.GetAsync(requestUrl).ConfigureAwait(false))
-                {
-                    response.EnsureSuccessStatusCode();
-
-                    var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    _logger.LogInformation($"GetTickers Response received. Response : {json}");
-
-                    var responseObject = JsonSerializer.Deserialize<GetTickersResponse>(json);
-
-                    IList<string> tickers = responseObject?.Tickers;
-
-                    return tickers ?? new List<string>();
-                }
+                Prices[price.Key] = price.Value;
             }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogError(ex, $"GetTickers Failed due to HTTP request error. Status Code: {ex.StatusCode}");
-            }
-            catch (JsonException ex)
-            {
-                _logger.LogError(ex, "GetTickers Failed JSON deserialization");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An unexpected error occurred while getting tickers.");
-            }
-            return new List<string>();
+
+            return Task.CompletedTask;
+        }
+        protected override async Task UpdatePrices(CancellationToken cancellationToken)
+        {
+            var prices = await GetPrices().ConfigureAwait(false);
+
+            await SetPrices(prices).ConfigureAwait(false);
+        }
+
+        public IDictionary<string, decimal> GetLatestPrices()
+        {
+            return Prices;
+        }
+        public decimal GetLatestPriceFromTicker(string Ticker)
+        {
+            return Prices[Ticker];
+        }
+        public IList<string> GetLatestTickers()
+        {
+            return Prices.Keys.ToList();
         }
     }
 }

@@ -10,7 +10,7 @@ namespace AutoTradeSystem.Services
 {
     public class AutoTradingStrategyService : AutoTradingStrategyServiceBase, IAutoTradingStrategyService
     {
-        private const int _checkRate = 5000;
+        private const int _checkRate = 500;
         private readonly ILogger<AutoTradingStrategyService> _logger;
         private readonly ConcurrentDictionary<string, TradingStrategy> _Strategies = new ConcurrentDictionary<string, TradingStrategy>();
         private readonly IPricingService _pricingService;
@@ -65,7 +65,7 @@ namespace AutoTradeSystem.Services
                 return false;
             }
 
-            var allowedTickers = (await _pricingService.GetTickers().ConfigureAwait(false)).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var allowedTickers = _pricingService.GetLatestTickers().ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             if (allowedTickers.Contains(TradingStrategy.Ticker))
             {
@@ -126,7 +126,7 @@ namespace AutoTradeSystem.Services
             decimal multiplyfactor = (100 + movement) / 100.0m;
 
             decimal? quote = OriginalPrice == 0m ? 
-                await _pricingService.GetPriceFromTicker(tradingStrategy.Ticker).ConfigureAwait(false) : 
+                _pricingService.GetLatestPriceFromTicker(tradingStrategy.Ticker) : 
                 OriginalPrice;
 
             if(quote == null) return (null, null);
@@ -199,7 +199,7 @@ namespace AutoTradeSystem.Services
         {
             var IDsToRemove = new List<string>();
 
-            var currentPrices = await _pricingService.GetPrices().ConfigureAwait(false);
+            var currentPrices = _pricingService.GetLatestPrices();
 
             if (!currentPrices.Any())
             {
@@ -209,6 +209,7 @@ namespace AutoTradeSystem.Services
 
             foreach (var strategy in Strategies)
             {
+
                 if (!currentPrices.TryGetValue(strategy.Value.TradingStrategyDto.Ticker, out var currentPrice)) continue;
 
                 if (currentPrice >= strategy.Value.ActionPrice && 

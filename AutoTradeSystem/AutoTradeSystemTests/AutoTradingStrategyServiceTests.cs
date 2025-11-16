@@ -20,7 +20,7 @@ namespace AutoTradeSystemTests
         {
             _pricingService = new Mock<IPricingService>();
             _tradeActionService = new Mock<ITradeActionService>().Object;
-            _pricingService.Setup(x => x.GetTickers()).Returns(Task.FromResult(_tickers));
+            _pricingService.Setup(x => x.GetLatestTickers()).Returns(_tickers);
             _logger = new Mock<ILogger<AutoTradingStrategyService>>().Object;
             _autoTradingStrategyService = new AutoTradingStrategyService(_logger, _pricingService.Object, _tradeActionService);
         }

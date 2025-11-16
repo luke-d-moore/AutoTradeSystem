@@ -1,10 +1,13 @@
-﻿namespace AutoTradeSystem.Interfaces
+﻿using System.Diagnostics;
+
+namespace AutoTradeSystem.Interfaces
 {
-    public interface IPricingService
+    public interface IPricingService :IHostedService
     {
-        public Task<IList<string>> GetTickers();
         public Task<IDictionary<string, decimal>> GetPrices();
-        public Task<decimal> GetPriceFromTicker(string ticker);
+        public IDictionary<string, decimal> GetLatestPrices();
+        public decimal GetLatestPriceFromTicker(string Ticker);
+        public IList<string> GetLatestTickers();
 
     }
 }
