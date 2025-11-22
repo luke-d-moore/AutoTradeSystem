@@ -6,6 +6,8 @@ using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
+
 // Add services to the container.
 builder.Services.AddCors(options =>
 {
@@ -54,6 +56,8 @@ builder.Services.AddSingleton<ITradeActionService, TradeActionService>();
 builder.Services.AddHttpClient();
 
 var app = builder.Build();
+
+app.MapDefaultEndpoints();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();

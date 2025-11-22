@@ -6,3 +6,7 @@
 /AutoTradeSystem/AutoTradeSystemTests/bin
 /AutoTradeSystem/AutoTradeSystemTests/obj
 AutoTradeSystem/AutoTradeSystem/appsettings.json
+/AutoTradeSystem/AutoTradeSystem.AppHost/obj
+/AutoTradeSystem/AutoTradeSystem.ServiceDefaults/obj
+/AutoTradeSystem/AutoTradeSystem.AppHost/bin
+/AutoTradeSystem/AutoTradeSystem.ServiceDefaults/bin
