@@ -1,5 +1,8 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-builder.AddProject<Projects.AutoTradeSystem>("autotradesystem");
+var rabbitMQConnection = builder.AddConnectionString("my-rabbit");
+
+builder.AddProject<Projects.AutoTradeSystem>("autotradesystem")
+    .WithReference(rabbitMQConnection);
 
 builder.Build().Run();

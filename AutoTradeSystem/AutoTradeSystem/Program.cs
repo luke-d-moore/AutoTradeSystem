@@ -8,6 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
+builder.AddRabbitMQClient("my-rabbit");
+
 // Add services to the container.
 builder.Services.AddCors(options =>
 {
