@@ -85,6 +85,13 @@ namespace AutoTradeSystem.Services
                 Prices[price.Key] = price.Value;
             }
 
+            var keysToRemove = Prices.Keys.Except(prices.Keys);
+
+            foreach (var key in keysToRemove)
+            {
+                Prices.TryRemove(key, out var price);
+            }
+
             return Task.CompletedTask;
         }
         protected override async Task UpdatePrices(CancellationToken cancellationToken)
