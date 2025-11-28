@@ -15,7 +15,7 @@ namespace AutoTradeSystem.Services
         private string _baseURL;
         private IHttpClientFactory _httpClientFactory;
         private HttpClient _client;
-        private const int _checkRate = 500;
+        private const int _checkRate = 5000;
         private ConcurrentDictionary<string, decimal> _prices = new ConcurrentDictionary<string, decimal>();
         public ConcurrentDictionary<string, decimal> Prices
         {
