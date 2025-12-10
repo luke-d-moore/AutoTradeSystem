@@ -3,6 +3,7 @@ using Serilog;
 using AutoTradeSystem.Logging;
 using AutoTradeSystem.Interfaces;
 using RabbitMQ.Client;
+using AutoTradeSystem.Controllers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -78,6 +79,8 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapEndpoints();
 
 app.MapFallbackToFile("/index.html");
 
