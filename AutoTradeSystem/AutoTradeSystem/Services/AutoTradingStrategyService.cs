@@ -209,11 +209,6 @@ namespace AutoTradeSystem.Services
 
             foreach (var strategy in Strategies)
             {
-                await _tradeActionService.EnqueueMessage(
-    strategy.Value.TradingStrategyDto.Ticker,
-    strategy.Value.TradingStrategyDto.Quantity,
-    strategy.Value.TradingStrategyDto.TradeAction.ToString()
-    );
                 if (!currentPrices.TryGetValue(strategy.Value.TradingStrategyDto.Ticker, out var currentPrice)) continue;
 
                 if (currentPrice >= strategy.Value.ActionPrice && 
