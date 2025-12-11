@@ -209,7 +209,11 @@ namespace AutoTradeSystem.Services
 
             foreach (var strategy in Strategies)
             {
-
+                await _tradeActionService.EnqueueMessage(
+    strategy.Value.TradingStrategyDto.Ticker,
+    strategy.Value.TradingStrategyDto.Quantity,
+    strategy.Value.TradingStrategyDto.TradeAction.ToString()
+    );
                 if (!currentPrices.TryGetValue(strategy.Value.TradingStrategyDto.Ticker, out var currentPrice)) continue;
 
                 if (currentPrice >= strategy.Value.ActionPrice && 
@@ -217,11 +221,11 @@ namespace AutoTradeSystem.Services
                 {
                     try
                     {
-                        await _tradeActionService.PublishMessage(
+                        await _tradeActionService.EnqueueMessage(
                             strategy.Value.TradingStrategyDto.Ticker, 
                             strategy.Value.TradingStrategyDto.Quantity, 
-                            strategy.Value.TradingStrategyDto.TradeAction.ToString(), 
-                            cancellationToken);
+                            strategy.Value.TradingStrategyDto.TradeAction.ToString()
+                            );
                         _logger.LogInformation("Successfully Executed Strategy for {@strategy}", strategy);
                         IDsToRemove.Add(strategy.Key);
                         continue;
@@ -237,11 +241,11 @@ namespace AutoTradeSystem.Services
                 {
                     try
                     {
-                        await _tradeActionService.PublishMessage(
+                        await _tradeActionService.EnqueueMessage(
                             strategy.Value.TradingStrategyDto.Ticker, 
                             strategy.Value.TradingStrategyDto.Quantity, 
-                            strategy.Value.TradingStrategyDto.TradeAction.ToString(), 
-                            cancellationToken);
+                            strategy.Value.TradingStrategyDto.TradeAction.ToString() 
+                            );
                         _logger.LogInformation("Successfully Executed Strategy for {@strategy}", strategy);
                         IDsToRemove.Add(strategy.Key);
                         continue;

@@ -49,12 +49,14 @@ builder.Services.AddSingleton<IConnectionFactory>(sp =>
 });
 
 builder.Services.AddSingleton<PricingService>();
+builder.Services.AddSingleton<TradeActionService>();
 builder.Services.AddSingleton<AutoTradingStrategyService>();
 builder.Services.AddSingleton<IPricingService>(p => p.GetRequiredService<PricingService>());
+builder.Services.AddSingleton<ITradeActionService>(p => p.GetRequiredService<TradeActionService>());
 builder.Services.AddSingleton<IAutoTradingStrategyService>(p => p.GetRequiredService<AutoTradingStrategyService>());
 builder.Services.AddHostedService(p => p.GetRequiredService<PricingService>());
+builder.Services.AddHostedService(p => p.GetRequiredService<TradeActionService>());
 builder.Services.AddHostedService(p => p.GetRequiredService<AutoTradingStrategyService>());
-builder.Services.AddSingleton<ITradeActionService, TradeActionService>();
 
 builder.Services.AddHttpClient();
 
