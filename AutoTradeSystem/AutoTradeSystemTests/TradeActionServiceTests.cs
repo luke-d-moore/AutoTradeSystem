@@ -66,7 +66,7 @@ namespace AutoTradeSystemTests
             await _service.PublishMessagesAsync(CancellationToken.None);
 
             // Assert
-            _mockFactory.Verify(f => f.CreateConnectionAsync(It.IsAny<CancellationToken>()), Times.Exactly(0));
+            _mockFactory.Verify(f => f.CreateConnectionAsync(It.IsAny<CancellationToken>()), Times.Never);
 
             _tradeActionLogger.Verify(
                 x => x.Log(
