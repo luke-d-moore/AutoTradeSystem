@@ -44,6 +44,10 @@ namespace AutoTradeSystem.Services
 
         protected override async Task PublishMessages(CancellationToken cancellationToken)
         {
+            await PublishMessagesAsync(cancellationToken);
+        }
+        public async Task PublishMessagesAsync(CancellationToken cancellationToken)
+        {
             while (!cancellationToken.IsCancellationRequested && MessagePayloads.TryDequeue(out var message))
             {
                 bool messagePublished = false;
@@ -77,7 +81,6 @@ namespace AutoTradeSystem.Services
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, $"Failed to publish message, Retrying connection/publish in {_networkRecoveryInterval} seconds.");
-                        MessagePayloads.Enqueue(message);
                         await Task.Delay(TimeSpan.FromSeconds(_networkRecoveryInterval), cancellationToken).ConfigureAwait(false);
                     }
                 }
