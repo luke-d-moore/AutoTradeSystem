@@ -199,6 +199,8 @@ namespace AutoTradeSystem.Services
         {
             var IDsToRemove = new List<string>();
 
+            await _pricingService.InitialPricesLoadedTask();
+
             var currentPrices = _pricingService.GetLatestPrices();
 
             if (!currentPrices.Any())

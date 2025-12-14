@@ -17,6 +17,8 @@ namespace AutoTradeSystem.Services
         private HttpClient _client;
         private const int _checkRate = 5000;
         private ConcurrentDictionary<string, decimal> _prices = new ConcurrentDictionary<string, decimal>();
+        private readonly TaskCompletionSource<bool> _initialpriceLoad = new();
+        public Task InitialPriceLoadTask => _initialpriceLoad.Task;
         public ConcurrentDictionary<string, decimal> Prices
         {
             get { return _prices; }
@@ -99,6 +101,11 @@ namespace AutoTradeSystem.Services
             var prices = await GetPrices().ConfigureAwait(false);
 
             await SetPrices(prices).ConfigureAwait(false);
+
+            if (Prices.Any() && !_initialpriceLoad.Task.IsCompleted)
+            {
+                _initialpriceLoad.SetResult(true);
+            }
         }
 
         public IDictionary<string, decimal> GetLatestPrices()
@@ -112,6 +119,11 @@ namespace AutoTradeSystem.Services
         public IList<string> GetLatestTickers()
         {
             return Prices.Keys.ToList();
+        }
+
+        public Task InitialPricesLoadedTask()
+        {
+            return InitialPriceLoadTask;
         }
     }
 }
