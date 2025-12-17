@@ -90,13 +90,14 @@ namespace AutoTradeSystemTests
             new List<object[]>
             {
                 new object[] { null },
-                new object[] { new TradingStrategyDto() { Ticker = "wrong", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy } },
-                new object[] { new TradingStrategyDto() { Ticker = "IBM", PriceChange = 0, Quantity = 10, TradeAction = TradeAction.Buy } },
-                new object[] { new TradingStrategyDto() { Ticker = "IBM", PriceChange = 10, Quantity = 0, TradeAction = TradeAction.Buy } },
-                new object[] { new TradingStrategyDto() { Ticker = "ab", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy } },
-                new object[] { new TradingStrategyDto() { Ticker = "", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy } },
-                new object[] { new TradingStrategyDto() { Ticker = "abcdef", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy } },
-                new object[] { new TradingStrategyDto() { Ticker = null, PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy } },
+                new object[] { new TradingStrategyDto() { Ticker = "wrong", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy, ActionPrice = 0} },
+                new object[] { new TradingStrategyDto() { Ticker = "IBM", PriceChange = 0, Quantity = 10, TradeAction = TradeAction.Buy, ActionPrice = 0 } },
+                new object[] { new TradingStrategyDto() { Ticker = "IBM", PriceChange = 10, Quantity = 0, TradeAction = TradeAction.Buy, ActionPrice = 0 } },
+                new object[] { new TradingStrategyDto() { Ticker = "ab", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy, ActionPrice = 0 } },
+                new object[] { new TradingStrategyDto() { Ticker = "", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy, ActionPrice = 0 } },
+                new object[] { new TradingStrategyDto() { Ticker = "abcdef", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy, ActionPrice = 0 } },
+                new object[] { new TradingStrategyDto() { Ticker = null, PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy, ActionPrice = 0 } },
+                new object[] { new TradingStrategyDto() { Ticker = "IBM", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy, ActionPrice = 10 } },
 
             };
 
@@ -139,11 +140,13 @@ namespace AutoTradeSystemTests
         public static IEnumerable<object[]> UpdateStrategyReturnFalseData =>
             new List<object[]>
             {
-                new object[] {new TradingStrategyDto() { Ticker = "IBM", PriceChange = 0, Quantity = 10, TradeAction = TradeAction.Buy } },
-                new object[] {new TradingStrategyDto() { Ticker = "IBM", PriceChange = 10, Quantity = 0, TradeAction = TradeAction.Buy } },
-                new object[] {new TradingStrategyDto() { Ticker = "IBM", PriceChange = 10, Quantity = -5, TradeAction = TradeAction.Buy } },
-                new object[] {new TradingStrategyDto() { Ticker = "IBM", PriceChange = -10, Quantity = 10, TradeAction = TradeAction.Buy } },
-                new object[] {new TradingStrategyDto() { Ticker = "abc", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy } }
+                new object[] {new TradingStrategyDto() { Ticker = "IBM", PriceChange = 0, Quantity = 10, TradeAction = TradeAction.Buy, ActionPrice = 0 } },
+                new object[] {new TradingStrategyDto() { Ticker = "IBM", PriceChange = 10, Quantity = 0, TradeAction = TradeAction.Buy, ActionPrice = 0 } },
+                new object[] {new TradingStrategyDto() { Ticker = "IBM", PriceChange = 10, Quantity = -5, TradeAction = TradeAction.Buy, ActionPrice = 0 } },
+                new object[] {new TradingStrategyDto() { Ticker = "IBM", PriceChange = -10, Quantity = 10, TradeAction = TradeAction.Buy, ActionPrice = 0 } },
+                new object[] {new TradingStrategyDto() { Ticker = "abc", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy, ActionPrice = 0 } },
+                new object[] {new TradingStrategyDto() { Ticker = "IBM", PriceChange = 10, Quantity = 10, TradeAction = TradeAction.Buy, ActionPrice = 10 } },
+                new object[] {new TradingStrategyDto() { Ticker = "IBM", PriceChange = -10, Quantity = 10, TradeAction = TradeAction.Buy, ActionPrice = -10 } }
             };
 
         [Theory, MemberData(nameof(UpdateStrategyReturnFalseData))]

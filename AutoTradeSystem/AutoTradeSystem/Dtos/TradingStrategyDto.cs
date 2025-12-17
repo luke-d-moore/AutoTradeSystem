@@ -3,6 +3,11 @@ using System.Text.Json.Serialization;
 
 namespace AutoTradeSystem.Dtos
 {
+    [RequiredEitherNotBoth(
+    propertyAName: nameof(PriceChange),
+    propertyBName: nameof(ActionPrice),
+    ErrorMessage = "You must provide either a PriceChange OR ActionPrice (greater than 0), but not both."
+)]
     public class TradingStrategyDto
     {
         [Required(ErrorMessage = "Ticker is required.")]
@@ -14,10 +19,13 @@ namespace AutoTradeSystem.Dtos
         [EnumDataType(typeof(TradeAction), ErrorMessage = "Invalid Trade Action. Valid values are 0 (Buy) or 1 (Sell).")]
         public TradeAction TradeAction { get; set; }
 
-        [Range(0.0001, double.MaxValue, ErrorMessage = "PriceChange must be greater than 0.")]
         [JsonPropertyName("PriceChange")]
-        [Required(ErrorMessage = "Price Change is required.")]
+        //[Required(ErrorMessage = "Price Change is required.")]
         public decimal PriceChange { get; set; }
+
+        [JsonPropertyName("ActionPrice")]
+        //[Required(ErrorMessage = "Action Price is required.")]
+        public decimal ActionPrice { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessage = "Quantity must be greater than 0.")]
         [JsonPropertyName("Quantity")]

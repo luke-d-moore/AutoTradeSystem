@@ -54,9 +54,11 @@ namespace AutoTradeSystem.Services
                 _logger.LogError($"Failed to {CalledFrom}, Invalid Trade Action. Valid values are 0 (Buy) or 1 (Sell).");
                 return false;
             }
-            if (TradingStrategy.PriceChange <= 0)
+            if ((TradingStrategy.PriceChange <= 0 && TradingStrategy.ActionPrice <=0) || 
+                (TradingStrategy.PriceChange > 0 && TradingStrategy.ActionPrice > 0)
+                )
             {
-                _logger.LogError($"Failed to {CalledFrom}, Price change must be greater than 0");
+                _logger.LogError($"Failed to {CalledFrom}, Price change or Action Price must be greater than 0, but not both");
                 return false;
             }
             if (TradingStrategy.Quantity <= 0)
@@ -92,13 +94,26 @@ namespace AutoTradeSystem.Services
         {
             if(!await ValidateStrategy(tradingStrategy, "Add Strategy").ConfigureAwait(false)) return false;
 
-            var actionPrice = await GetActionPrice(tradingStrategy).ConfigureAwait(false);
+            var strategy = new TradingStrategy();
 
-            if(!ValidateActionPrice(actionPrice.ActionPrice, actionPrice.OriginalPrice, "Add Strategy")) return false;
+            if(tradingStrategy.ActionPrice > 0)
+            {
+                strategy = new TradingStrategy(
+                    tradingStrategy.ActionPrice, 
+                    tradingStrategy, 
+                    _pricingService.GetLatestPriceFromTicker(tradingStrategy.Ticker)
+                    );
+            }
+            else
+            {
+                var actionPrice = await GetActionPrice(tradingStrategy).ConfigureAwait(false);
+
+                if (!ValidateActionPrice(actionPrice.ActionPrice, actionPrice.OriginalPrice, "Add Strategy")) return false;
+
+                strategy = new TradingStrategy(actionPrice.ActionPrice.Value, tradingStrategy, actionPrice.OriginalPrice.Value);
+            }
 
             var id = Guid.NewGuid().ToString();
-
-            var strategy = new TradingStrategy(actionPrice.ActionPrice.Value, tradingStrategy, actionPrice.OriginalPrice.Value);
 
             if (Strategies.TryAdd(id, strategy))
             {
@@ -165,17 +180,27 @@ namespace AutoTradeSystem.Services
 
             if (!await ValidateStrategy(tradingStrategy, "Update Strategy").ConfigureAwait(false)) return false;
 
-            var newActionPrice = await GetActionPrice(
-                tradingStrategy, 
-                currentStrategy.OriginalPrice)
-                .ConfigureAwait(false);
-            if (!ValidateActionPrice(newActionPrice.ActionPrice, newActionPrice.OriginalPrice, "Update Strategy")) return false;
+            if (tradingStrategy.ActionPrice > 0)
+            {
+                currentStrategy.ActionPrice = tradingStrategy.ActionPrice;
+                currentStrategy.TradingStrategyDto.ActionPrice = tradingStrategy.ActionPrice;
+            }
+            else
+            {
+                var newActionPrice = await GetActionPrice(
+                    tradingStrategy,
+                    currentStrategy.OriginalPrice)
+                    .ConfigureAwait(false);
+                if (!ValidateActionPrice(newActionPrice.ActionPrice, newActionPrice.OriginalPrice, "Update Strategy")) return false;
+
+                currentStrategy.ActionPrice = newActionPrice.ActionPrice.Value;
+                currentStrategy.TradingStrategyDto.ActionPrice = newActionPrice.ActionPrice.Value;
+            }
 
             currentStrategy.TradingStrategyDto.TradeAction = tradingStrategy.TradeAction;
             currentStrategy.TradingStrategyDto.Ticker = tradingStrategy.Ticker;
             currentStrategy.TradingStrategyDto.Quantity = tradingStrategy.Quantity;
             currentStrategy.TradingStrategyDto.PriceChange = tradingStrategy.PriceChange;
-            currentStrategy.ActionPrice = newActionPrice.ActionPrice.Value;
 
             _logger.LogInformation($"Strategy Updated Successfully {ID}");
 
