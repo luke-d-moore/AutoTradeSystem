@@ -1,21 +1,15 @@
 ﻿using AutoTradeSystem.Interfaces;
-using Serilog;
-using System;
+using Google.Protobuf.WellKnownTypes;
+using Grpc.Core;
+using PricingSystem.Protos;
 using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.Globalization;
-using System.Text.Json;
 
 namespace AutoTradeSystem.Services
 {
     public class PricingService : PricingServiceBase, IPricingService
     {
         private readonly ILogger<PricingService> _logger;
-        private IConfiguration _configuration;
-        private string _baseURL;
-        private IHttpClientFactory _httpClientFactory;
-        private HttpClient _client;
-        private const int _checkRate = 5000;
+        private readonly GrpcPricingService.GrpcPricingServiceClient _grpcClient;
         private ConcurrentDictionary<string, decimal> _prices = new ConcurrentDictionary<string, decimal>();
         private readonly TaskCompletionSource<bool> _initialpriceLoad = new();
         public Task InitialPriceLoadTask => _initialpriceLoad.Task;
@@ -27,85 +21,56 @@ namespace AutoTradeSystem.Services
                 _prices = value; 
             }
         }
-        public string BaseURL
+        public PricingService(ILogger<PricingService> logger, GrpcPricingService.GrpcPricingServiceClient grpcClient)
+            :base(logger)
         {
-            get { return _baseURL; }
-        }
-
-        public PricingService(ILogger<PricingService> logger, IConfiguration configuration, IHttpClientFactory httpClientFactory)
-            : base(logger, _checkRate)
-        { 
             _logger = logger;
-            _configuration = configuration;
-            _baseURL = _configuration["PricingSystemBaseURL"];
-            _httpClientFactory = httpClientFactory;
-            _client = _httpClientFactory.CreateClient();
-
+            _grpcClient = grpcClient;
         }
-        public async Task<IDictionary<string, decimal>> GetPrices()
+        private async Task SetPrices(CancellationToken cancellationToken)
         {
-            var requestUrl = $"{BaseURL}/GetAllPrices";
+            using var call = _grpcClient.GetLatestPrices(new Empty());
 
-            _logger.LogInformation($"GetAllPrices Request sent to {requestUrl}");
-
-            try
+            while (!cancellationToken.IsCancellationRequested)
             {
-                using (HttpResponseMessage response = await _client.GetAsync(requestUrl).ConfigureAwait(false))
+                try
                 {
-                    response.EnsureSuccessStatusCode();
+                    await foreach (var priceUpdate in call.ResponseStream.ReadAllAsync())
+                    {
+                        if (Prices.Any() && !_initialpriceLoad.Task.IsCompleted)
+                        {
+                            _initialpriceLoad.SetResult(true);
+                        }
+                        Prices[priceUpdate.Symbol] = (decimal)priceUpdate.Price;
 
-                    var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        _logger.LogInformation($"{priceUpdate.Symbol} : {Prices[priceUpdate.Symbol]}");
+                    }
 
-                    _logger.LogInformation($"GetAllPrices Response received. Response : {json}");
-
-                    var responseObject = JsonSerializer.Deserialize<GetPriceResponse>(json);
-
-                    IDictionary<string, decimal> prices = responseObject?.Prices;
-
-                    return prices ?? new Dictionary<string, decimal>();
+                    _logger.LogError("Server connection closed gracefully. Attempting to reconnect in 5s...");
+                    await Task.Delay(5000);
+                }
+                catch (OperationCanceledException ex) when (cancellationToken.IsCancellationRequested)
+                {
+                    _logger.LogError(ex, $"Application shutting down");
+                    // If the application is shutting down while trying to connect, exit gracefully
+                    throw;
+                }
+                catch (Grpc.Core.RpcException ex)
+                {
+                    // This catches network errors, server crashes, or temporary outages
+                    _logger.LogError($"gRPC Error: {ex.Status.Detail}. Retrying...");
+                    await Task.Delay(5000);
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"An unexpected error occurred: {ex.Message}");
                 }
             }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogError(ex, $"GetAllPrices Failed due to HTTP request error. Status Code: {ex.StatusCode}");
-            }
-            catch (JsonException ex)
-            {
-                _logger.LogError(ex, "GetAllPrices Failed JSON deserialization");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An unexpected error occurred while getting all prices.");
-            }
-            return new Dictionary<string, decimal>();
-        }
-
-        private Task SetPrices(IDictionary<string, decimal> prices)
-        {
-            foreach (var price in prices)
-            {
-                Prices[price.Key] = price.Value;
-            }
-
-            var keysToRemove = Prices.Keys.Except(prices.Keys);
-
-            foreach (var key in keysToRemove)
-            {
-                Prices.TryRemove(key, out var price);
-            }
-
-            return Task.CompletedTask;
         }
         protected override async Task UpdatePrices(CancellationToken cancellationToken)
         {
-            var prices = await GetPrices().ConfigureAwait(false);
-
-            await SetPrices(prices).ConfigureAwait(false);
-
-            if (Prices.Any() && !_initialpriceLoad.Task.IsCompleted)
-            {
-                _initialpriceLoad.SetResult(true);
-            }
+            await SetPrices(cancellationToken).ConfigureAwait(false);
         }
 
         public IDictionary<string, decimal> GetLatestPrices()
