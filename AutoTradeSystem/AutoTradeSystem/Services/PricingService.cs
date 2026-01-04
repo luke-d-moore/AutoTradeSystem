@@ -13,14 +13,7 @@ namespace AutoTradeSystem.Services
         private ConcurrentDictionary<string, decimal> _prices = new ConcurrentDictionary<string, decimal>();
         private readonly TaskCompletionSource<bool> _initialpriceLoad = new();
         public Task InitialPriceLoadTask => _initialpriceLoad.Task;
-        public ConcurrentDictionary<string, decimal> Prices
-        {
-            get { return _prices; }
-            set 
-            { 
-                _prices = value; 
-            }
-        }
+        public ConcurrentDictionary<string, decimal> Prices => _prices;
         public PricingService(ILogger<PricingService> logger, GrpcPricingService.GrpcPricingServiceClient grpcClient)
             :base(logger)
         {
