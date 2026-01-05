@@ -1,9 +1,10 @@
-using AutoTradeSystem.Services;
-using Serilog;
-using AutoTradeSystem.Logging;
-using AutoTradeSystem.Interfaces;
-using RabbitMQ.Client;
 using AutoTradeSystem.Controllers;
+using AutoTradeSystem.Interfaces;
+using AutoTradeSystem.Logging;
+using AutoTradeSystem.Services;
+using PricingSystem.Protos;
+using RabbitMQ.Client;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +12,6 @@ builder.AddServiceDefaults();
 
 builder.AddRabbitMQClient("my-rabbit");
 
-// Add services to the container.
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(
@@ -22,8 +22,8 @@ builder.Services.AddCors(options =>
                   .AllowAnyHeader();
         });
 });
+
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -58,7 +58,15 @@ builder.Services.AddHostedService(p => p.GetRequiredService<PricingService>());
 builder.Services.AddHostedService(p => p.GetRequiredService<TradeActionService>());
 builder.Services.AddHostedService(p => p.GetRequiredService<AutoTradingStrategyService>());
 
-builder.Services.AddHttpClient();
+builder.Services.AddGrpcClient<GrpcPricingService.GrpcPricingServiceClient>(o =>
+{
+    o.Address = new Uri(builder.Configuration["PricingSystemBaseURL"]);
+})
+.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+{
+    ServerCertificateCustomValidationCallback =
+        HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+});
 
 var app = builder.Build();
 
@@ -67,7 +75,6 @@ app.MapDefaultEndpoints();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -87,3 +94,4 @@ app.MapEndpoints();
 app.MapFallbackToFile("/index.html");
 
 app.Run();
+
