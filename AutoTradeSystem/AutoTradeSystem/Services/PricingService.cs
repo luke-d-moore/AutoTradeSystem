@@ -12,6 +12,7 @@ namespace AutoTradeSystem.Services
         private readonly GrpcPricingService.GrpcPricingServiceClient _grpcClient;
         private ConcurrentDictionary<string, decimal> _prices = new ConcurrentDictionary<string, decimal>();
         private readonly TaskCompletionSource<bool> _initialpriceLoad = new();
+        private int _retryInterval = 5000;
         public Task InitialPriceLoadTask => _initialpriceLoad.Task;
         public ConcurrentDictionary<string, decimal> Prices => _prices;
         public PricingService(ILogger<PricingService> logger, GrpcPricingService.GrpcPricingServiceClient grpcClient)
@@ -22,7 +23,7 @@ namespace AutoTradeSystem.Services
         }
         protected override async Task UpdatePrices(CancellationToken cancellationToken)
         {
-            using var call = _grpcClient.GetLatestPrices(new Empty());
+            using var call = _grpcClient.GetLatestPrices(new Empty(), deadline: DateTime.UtcNow.AddSeconds(3));
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -40,19 +41,17 @@ namespace AutoTradeSystem.Services
                     }
 
                     _logger.LogError("Server connection closed gracefully. Attempting to reconnect in 5s...");
-                    await Task.Delay(5000);
+                    await Task.Delay(_retryInterval);
                 }
                 catch (OperationCanceledException ex) when (cancellationToken.IsCancellationRequested)
                 {
                     _logger.LogError(ex, $"Application shutting down");
-                    // If the application is shutting down while trying to connect, exit gracefully
                     throw;
                 }
-                catch (Grpc.Core.RpcException ex)
+                catch (RpcException ex)
                 {
-                    // This catches network errors, server crashes, or temporary outages
-                    _logger.LogError($"gRPC Error: {ex.Status.Detail}. Retrying...");
-                    await Task.Delay(5000);
+                    _logger.LogError($"gRPC Error message: {ex.Message}. Retrying...");
+                    await Task.Delay(_retryInterval);
                     break;
                 }
                 catch (Exception ex)

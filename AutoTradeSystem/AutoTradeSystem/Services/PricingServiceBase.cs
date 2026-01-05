@@ -14,14 +14,7 @@
             _logger.LogInformation("Pricing Service is starting.");
             while (!cancellationToken.IsCancellationRequested)
             {
-                try
-                {
-                    await UpdatePrices(cancellationToken).ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to get and set prices.");
-                }
+                await UpdatePrices(cancellationToken).ConfigureAwait(false);
             }
             _logger.LogInformation("Pricing Service is stopping.");
         }
