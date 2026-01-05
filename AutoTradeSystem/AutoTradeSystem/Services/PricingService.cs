@@ -20,7 +20,7 @@ namespace AutoTradeSystem.Services
             _logger = logger;
             _grpcClient = grpcClient;
         }
-        private async Task SetPrices(CancellationToken cancellationToken)
+        protected override async Task UpdatePrices(CancellationToken cancellationToken)
         {
             using var call = _grpcClient.GetLatestPrices(new Empty());
 
@@ -60,10 +60,6 @@ namespace AutoTradeSystem.Services
                     _logger.LogError($"An unexpected error occurred: {ex.Message}");
                 }
             }
-        }
-        protected override async Task UpdatePrices(CancellationToken cancellationToken)
-        {
-            await SetPrices(cancellationToken).ConfigureAwait(false);
         }
 
         public IDictionary<string, decimal> GetLatestPrices()
