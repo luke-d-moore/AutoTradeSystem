@@ -23,7 +23,7 @@ namespace AutoTradeSystem.Services
         }
         protected override async Task UpdatePrices(CancellationToken cancellationToken)
         {
-            using var call = _grpcClient.GetLatestPrices(new Empty(), deadline: DateTime.UtcNow.AddSeconds(3));
+            using var call = _grpcClient.GetLatestPrices(new Empty());
 
             while (!cancellationToken.IsCancellationRequested)
             {
