@@ -67,7 +67,7 @@ namespace AutoTradeSystem.Services
                 return false;
             }
 
-            var allowedTickers = _pricingService.GetLatestTickers().ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var allowedTickers = _pricingService.GetLatestTickers();
 
             if (allowedTickers.Contains(TradingStrategy.Ticker))
             {

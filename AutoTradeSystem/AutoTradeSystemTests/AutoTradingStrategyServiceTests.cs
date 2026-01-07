@@ -14,7 +14,7 @@ namespace AutoTradeSystemTests
         private readonly ILogger<AutoTradingStrategyService> _logger;
         private readonly IConfiguration _configuration;
         private readonly IAutoTradingStrategyService _autoTradingStrategyService;
-        private IList<string> _tickers = new List<string>() { "IBM" };
+        private HashSet<string> _tickers = new HashSet<string>() { "IBM" };
 
     public AutoTradingStrategyServiceTests()
         {
