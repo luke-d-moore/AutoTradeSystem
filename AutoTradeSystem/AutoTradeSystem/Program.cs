@@ -10,8 +10,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-builder.AddRabbitMQClient("my-rabbit");
-
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(
@@ -27,25 +25,18 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var configurationBuilder = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-var configuration = configurationBuilder.Build();
-
-builder.Services.AddSingleton<IConfiguration>(configuration);
-LogConfiguration.ConfigureSerilog(configuration);
+LogConfiguration.ConfigureSerilog(builder.Configuration);
 builder.Services.AddLogging(configure => { configure.AddSerilog(); });
 
 builder.Services.AddSingleton<IConnectionFactory>(sp =>
 {
-    var configuration = sp.GetRequiredService<IConfiguration>();
-    var factory = new ConnectionFactory
+    return new ConnectionFactory
     {
-        HostName = configuration["ConnectionHostName"],
+        HostName = builder.Configuration["ConnectionHostName"] ?? "localhost",
         AutomaticRecoveryEnabled = true,
         NetworkRecoveryInterval = TimeSpan.FromSeconds(
-            int.Parse(configuration["NetworkRecoveryIntervalSeconds"] ?? "10"))
+            int.Parse(builder.Configuration["NetworkRecoveryIntervalSeconds"] ?? "10"))
     };
-    return factory;
 });
 
 builder.Services.AddSingleton<PricingService>();
