@@ -38,11 +38,11 @@ namespace AutoTradeSystem.Controllers
         [SwaggerResponse(StatusCodes.Status400BadRequest, "Bad Request - Validation failed")]
         public async Task<IActionResult> AddStrategy(TradingStrategyDto tradingStrategy)
         {
-            var added = await _autoTradingStrategyService.AddStrategy(tradingStrategy).ConfigureAwait(false);
-            if (added)
+            var result = await _autoTradingStrategyService.AddStrategy(tradingStrategy).ConfigureAwait(false);
+            if (result.Added)
             {
                 _logger.LogInformation("Strategy Added Successfully");
-                return Ok(new AddStrategyResponse(true, "Strategy Added Successfully", tradingStrategy));
+                return Ok(new AddStrategyResponse(true, "Strategy Added Successfully", tradingStrategy, result.StrategyID));
             }
             else
             {

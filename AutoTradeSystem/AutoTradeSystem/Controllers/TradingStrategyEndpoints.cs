@@ -22,10 +22,10 @@ namespace AutoTradeSystem.Controllers
 
         public static async Task<IResult> AddStrategy(TradingStrategyDto tradingStrategy, IAutoTradingStrategyService autoTradingStrategyService)
         {
-            var added = await autoTradingStrategyService.AddStrategy(tradingStrategy).ConfigureAwait(false);
-            if (added)
+            var result = await autoTradingStrategyService.AddStrategy(tradingStrategy).ConfigureAwait(false);
+            if (result.Added)
             {
-                return Results.Ok(new AddStrategyResponse(true, "Strategy Added Successfully", tradingStrategy));
+                return Results.Ok(new AddStrategyResponse(true, "Strategy Added Successfully", tradingStrategy, result.StrategyID));
             }
             else
             {

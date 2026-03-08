@@ -54,7 +54,7 @@ namespace AutoTradeSystemTests
             var tradingStrategy = GetTradingStrategy();
             var result = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
             //Act and Assert
-            Assert.True(result);
+            Assert.True(result.Added);
         }
         [Fact]
         public async Task RemoveStrategy_ValidID_ReturnsTrue()
@@ -107,7 +107,7 @@ namespace AutoTradeSystemTests
             //Arrange
             var result = await _autoTradingStrategyService.AddStrategy(tradingStrategy);
             //Act and Assert
-            Assert.False(result);
+            Assert.False(result.Added);
         }
         [Theory]
         [InlineData(null)]

@@ -6,8 +6,10 @@ public class AddStrategyResponse : BaseResponse
 {
     [JsonPropertyName("TradingStrategy")]
     public TradingStrategyDto TradingStrategyDto { get; set; }
-    public AddStrategyResponse(bool success, string message, TradingStrategyDto tradingStrategy) : base(success, message)
+    public string StrategyID {get; set; }
+    public AddStrategyResponse(bool success, string message, TradingStrategyDto tradingStrategy, string strategyID) : base(success, message)
     {
         TradingStrategyDto = tradingStrategy;
+        StrategyID = strategyID;
     }
 }

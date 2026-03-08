@@ -90,9 +90,9 @@ namespace AutoTradeSystem.Services
             }
             return true;
         }
-        public async Task<bool> AddStrategy(TradingStrategyDto tradingStrategy)
+        public async Task<(bool Added, string StrategyID)> AddStrategy(TradingStrategyDto tradingStrategy)
         {
-            if(!await ValidateStrategy(tradingStrategy, "Add Strategy").ConfigureAwait(false)) return false;
+            if(!await ValidateStrategy(tradingStrategy, "Add Strategy").ConfigureAwait(false)) return (false, string.Empty);
 
             var strategy = new TradingStrategy();
 
@@ -108,7 +108,7 @@ namespace AutoTradeSystem.Services
             {
                 var actionPrice = await GetActionPrice(tradingStrategy).ConfigureAwait(false);
 
-                if (!ValidateActionPrice(actionPrice.ActionPrice, actionPrice.OriginalPrice, "Add Strategy")) return false;
+                if (!ValidateActionPrice(actionPrice.ActionPrice, actionPrice.OriginalPrice, "Add Strategy")) return (false, string.Empty);
 
                 strategy = new TradingStrategy(actionPrice.ActionPrice.Value, tradingStrategy, actionPrice.OriginalPrice.Value);
             }
@@ -118,12 +118,12 @@ namespace AutoTradeSystem.Services
             if (Strategies.TryAdd(id, strategy))
             {
                 _logger.LogInformation($"Strategy Added Successfully {id}");
-                return true;
+                return (true, id);
             }
             else
             {
                 _logger.LogError("Failed to Add Strategy {@strategy}", strategy);
-                return false;
+                return (false, string.Empty);
             }
         }
         private async Task<(decimal? ActionPrice, decimal? OriginalPrice)> GetActionPrice(TradingStrategyDto tradingStrategy, decimal OriginalPrice = 0m)
